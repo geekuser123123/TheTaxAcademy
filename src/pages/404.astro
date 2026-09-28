@@ -1,18 +1,18 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
 ---
 
 <SiteLayout title="Page not found">
-  <section class="section">
-    <div class="container" style="max-width:720px">
-      <span class="eyebrow">Page not found</span>
-      <h1 style="font-size:clamp(2.2rem,5vw,3.5rem)">Let’s get you back on track.</h1>
-      <p class="lede" style="margin:16px 0 28px">The page may have moved. Choose where you’d like to go.</p>
-      <div style="display:flex; gap:12px; flex-wrap:wrap">
-        <a href="/" class="button">Home</a>
-        <a href="/forms" class="button button-dark">Forms & requests</a>
-        <a href="/portal" class="button button-dark">Client portal</a>
-      </div>
+  <PageHero
+    eyebrow="Page not found"
+    title="Let’s get you back on track."
+    lede="The page may have moved. Choose where you’d like to go."
+  >
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:32px">
+      <a href="/" class="button">Home</a>
+      <a href="/forms" class="button button-secondary">Forms & requests</a>
+      <a href="/portal" class="button button-secondary">Client portal</a>
     </div>
-  </section>
+  </PageHero>
 </SiteLayout>

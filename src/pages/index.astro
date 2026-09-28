@@ -242,7 +242,7 @@ const contactForm = getForm('contact-team')!;
   .hero {
     position: relative;
     background:
-      radial-gradient(900px 500px at 85% 10%, rgba(31, 154, 75, 0.28), transparent 60%),
+      radial-gradient(900px 520px at 85% 55%, rgba(31, 154, 75, 0.26), transparent 62%),
       radial-gradient(700px 400px at 0% 100%, rgba(116, 191, 68, 0.12), transparent 60%),
       var(--ink);
     color: #fff;
@@ -267,7 +267,7 @@ const contactForm = getForm('contact-team')!;
     grid-template-columns: 1.15fr 0.85fr;
     gap: clamp(32px, 6vw, 80px);
     align-items: center;
-    padding-block: clamp(56px, 8vw, 104px);
+    padding-block: calc(var(--plate-overhang) + clamp(32px, 5vw, 56px)) clamp(56px, 8vw, 104px);
   }
 
   .welcome-label {

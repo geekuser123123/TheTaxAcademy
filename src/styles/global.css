@@ -28,6 +28,11 @@
   --shadow: 0 1px 2px rgba(0, 29, 33, 0.06), 0 8px 24px rgba(0, 29, 33, 0.06);
   --shadow-lg: 0 24px 60px rgba(0, 20, 24, 0.28);
   --container: 1200px;
+  /* Header logo plate (white, angled) that hangs over the top of each page */
+  --header-h: 84px;
+  --plate-w: 330px;
+  --plate-h: 204px;
+  --plate-overhang: calc(var(--plate-h) - var(--header-h));
   --gutter: clamp(16px, 4vw, 32px);
 }
 
@@ -281,32 +286,31 @@ p {
   display: flex;
   align-items: center;
   gap: 28px;
-  min-height: 84px;
+  min-height: var(--header-h);
+  /* Keep the nav clear of the logo plate at any viewport width */
+  padding-left: max(
+    var(--gutter),
+    calc(var(--plate-w) + 16px - max(0px, (100vw - var(--container) - 2 * var(--gutter)) / 2))
+  );
 }
 
-/* Seal + serif wordmark, echoing the lettering in the original logo */
+/* White angled logo plate pinned to the top-left corner */
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex: none;
-  color: #fff;
-  text-decoration: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  display: block;
+  width: var(--plate-w);
+  height: var(--plate-h);
+  padding: 20px 0 0 30px;
+  background: #fff;
+  clip-path: polygon(0 0, 100% 0, 63% 100%, 0 100%);
 }
 
 .brand img {
-  width: 54px;
-  height: 54px;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
-}
-
-.brand-name {
-  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
-  font-size: 1.45rem;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
+  width: 172px;
+  height: auto;
 }
 
 
@@ -380,7 +384,7 @@ p {
   .mobile-nav[data-open='true'] {
     display: block;
     border-top: 1px solid var(--line-dark);
-    padding: 12px var(--gutter) 24px;
+    padding: calc(var(--plate-overhang) + 12px) var(--gutter) 24px;
     background: var(--ink);
   }
 
@@ -409,13 +413,17 @@ p {
     justify-content: flex-end;
   }
 
-  .brand img {
-    width: 44px;
-    height: 44px;
+  :root {
+    --plate-w: 206px;
+    --plate-h: 136px;
   }
 
-  .brand-name {
-    font-size: 1.2rem;
+  .brand {
+    padding: 12px 0 0 16px;
+  }
+
+  .brand img {
+    width: 108px;
   }
 }
 
@@ -592,7 +600,7 @@ p {
   position: relative;
   background: var(--ink);
   color: #fff;
-  padding: clamp(56px, 8vw, 96px) 0 clamp(64px, 9vw, 104px);
+  padding: calc(var(--plate-overhang) + clamp(40px, 5vw, 64px)) 0 clamp(64px, 9vw, 104px);
   overflow: hidden;
 }
 
@@ -600,7 +608,7 @@ p {
   content: '';
   position: absolute;
   right: -120px;
-  top: -80px;
+  top: 40px;
   width: 520px;
   height: 520px;
   background: url('/images/seal.png') center / contain no-repeat;
