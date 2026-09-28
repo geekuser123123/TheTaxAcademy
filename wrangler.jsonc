@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "the-tax-academy",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Client portal database. Create with:
+  //   npx wrangler d1 create tax-academy
+  // then paste the returned database_id below.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tax-academy",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Private client documents. Create with:
+  //   npx wrangler r2 bucket create tax-academy-documents
+  "r2_buckets": [
+    {
+      "binding": "DOCUMENTS",
+      "bucket_name": "tax-academy-documents"
+    }
+  ],
+
+  "vars": {
+    // Optional email notifications for new requests and client messages (see README).
+    // Comma-separate multiple addresses in TEAM_EMAIL.
+    "TEAM_EMAIL": "",
+    "MAIL_FROM": ""
+  }
+  // Secrets (set with `npx wrangler secret put NAME`), all optional:
+  //   RESEND_API_KEY        enables team email notifications
+  //   TURNSTILE_SECRET_KEY  enables Cloudflare Turnstile on public forms
+}

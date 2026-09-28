@@ -1,0 +1,74 @@
+---
+import Icon from '../Icon.astro';
+import type { DocumentRow } from '../../lib/db';
+import type { SessionUser } from '../../lib/auth';
+import { formatBytes, formatDate } from '../../lib/format';
+
+interface Props {
+  documents: DocumentRow[];
+  viewer: SessionUser;
+  canDelete?: boolean;
+}
+
+const { documents, viewer, canDelete = false } = Astro.props;
+---
+
+{
+  documents.length === 0 ? (
+    <div class="empty">
+      <span class="icon-box"><Icon name="folder" size={22} /></span>
+      <p>No documents yet.</p>
+    </div>
+  ) : (
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Document</th>
+            <th>Added</th>
+            <th>Size</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {documents.map((d) => (
+            <tr>
+              <td>
+                <a href={`/portal/documents/${d.id}`} target="_blank" rel="noopener">{d.title}</a>
+                <div class="small muted">
+                  {d.category} · {d.uploaded_by === viewer.id ? 'you' : d.uploader_role === 'client' ? d.uploader_name : 'Tax Academy team'}
+                </div>
+              </td>
+              <td class="small muted">{formatDate(d.created_at)}</td>
+              <td class="small muted">{formatBytes(d.size_bytes)}</td>
+              <td>
+                <div class="row-actions">
+                  <a href={`/portal/documents/${d.id}`} class="icon-button" download={d.file_name} aria-label={`Download ${d.title}`} title="Download">
+                    <Icon name="download" size={17} />
+                  </a>
+                  {canDelete && (
+                    <form method="post" class="inline-form" data-confirm={`Delete “${d.title}”? This can’t be undone.`}>
+                      <input type="hidden" name="action" value="delete-document" />
+                      <input type="hidden" name="document_id" value={d.id} />
+                      <button type="submit" class="icon-button" aria-label={`Delete ${d.title}`} title="Delete">
+                        <Icon name="trash" size={17} />
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      if (!confirm(form.dataset.confirm!)) e.preventDefault();
+    });
+  });
+</script>

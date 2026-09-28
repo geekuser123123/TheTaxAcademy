@@ -1,0 +1,55 @@
+---
+import Icon from '../Icon.astro';
+import type { MessageRow } from '../../lib/db';
+import type { SessionUser } from '../../lib/auth';
+import { formatDateTime } from '../../lib/format';
+
+interface Props {
+  messages: MessageRow[];
+  viewer: SessionUser;
+  error?: string;
+  emptyText: string;
+}
+
+const { messages, viewer, error, emptyText } = Astro.props;
+// From the team's side, every team member's message counts as "ours".
+const mine = (m: MessageRow) => (viewer.role === 'client' ? m.author_id === viewer.id : m.author_role !== 'client');
+---
+
+<div class="thread" data-thread>
+  {
+    messages.length === 0 ? (
+      <p class="muted small">{emptyText}</p>
+    ) : (
+      messages.map((m) => (
+        <div class:list={['bubble', { mine: mine(m) }]}>
+          <small>
+            {m.author_id === viewer.id ? 'You' : m.author_name} · {formatDateTime(m.created_at)}
+          </small>
+          <p>{m.body}</p>
+        </div>
+      ))
+    )
+  }
+</div>
+<form method="post" class="composer">
+  <input type="hidden" name="action" value="message" />
+  {
+    error && (
+      <div class="alert alert-error" role="alert">
+        <Icon name="circleAlert" size={18} />
+        {error}
+      </div>
+    )
+  }
+  <div class="field">
+    <label for="body" class="sr-only">Message</label>
+    <textarea id="body" name="body" required maxlength="5000" placeholder="Write a message…"></textarea>
+  </div>
+  <button class="button" type="submit"><Icon name="send" size={16} />Send</button>
+</form>
+
+<script>
+  const thread = document.querySelector<HTMLElement>('[data-thread]');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+</script>

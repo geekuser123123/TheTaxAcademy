@@ -1,0 +1,87 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import RequestFormFields from '../components/RequestFormFields.astro';
+import { getForm } from '../data/forms';
+import { site } from '../data/site';
+
+const form = getForm('contact-team')!;
+---
+
+<SiteLayout title="Contact" description="Reach the Tax Academy team by phone or message.">
+  <PageHero eyebrow="Contact" title="Have questions? Get in touch." lede="Tell us what’s going on. A real person on the team will help you find the right next step." />
+  <section class="section" id="request">
+    <div class="container contact-layout">
+      <div class="contact-info">
+        <a href={site.phoneHref} class="info-row">
+          <span class="icon-box"><Icon name="phone" size={20} /></span>
+          <span><small>Call</small><strong>{site.phone}</strong></span>
+        </a>
+        {
+          site.email && (
+            <a href={`mailto:${site.email}`} class="info-row">
+              <span class="icon-box"><Icon name="mail" size={20} /></span>
+              <span><small>Email</small><strong>{site.email}</strong></span>
+            </a>
+          )
+        }
+        <div class="info-row">
+          <span class="icon-box"><Icon name="mapPin" size={20} /></span>
+          <span><small>Mailing address</small><strong>{site.address.line1}<br />{site.address.line2}</strong></span>
+        </div>
+        <div class="card" style="margin-top:8px">
+          <h3>Looking for a specific form?</h3>
+          <p>Documents, annual reporting, amendments, loans, and renewals each have their own short form.</p>
+          <a href="/forms" class="text-link" style="margin-top:12px">View all forms<Icon name="arrowRight" size={16} /></a>
+        </div>
+      </div>
+      <div class="form-card">
+        <h2>Send us a message</h2>
+        <RequestFormFields form={form} />
+      </div>
+    </div>
+  </section>
+</SiteLayout>
+
+<style>
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .contact-info {
+    display: grid;
+    gap: 16px;
+  }
+  .info-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    text-decoration: none;
+  }
+  .info-row small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .info-row strong {
+    font-weight: 600;
+  }
+  .form-card {
+    padding: clamp(24px, 4vw, 40px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .form-card h2 {
+    font-size: 1.6rem;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 900px) {
+    .contact-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

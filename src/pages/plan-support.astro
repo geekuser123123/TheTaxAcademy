@@ -1,0 +1,75 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import FormRow from '../components/FormRow.astro';
+import Faq from '../components/Faq.astro';
+import HelpBand from '../components/HelpBand.astro';
+import { planServices } from '../data/services';
+import { getForm } from '../data/forms';
+
+const upkeep = ['business-update', 'annual-reporting', 'plan-amendment', 'document-request'].map((s) => getForm(s)!);
+---
+
+<SiteLayout title="Plan support" description="IRS-compliant plan documents and administrative support for self-directed 401(k) plans.">
+  <PageHero
+    eyebrow="401(k) plan administration"
+    title="Self-directed 401(k) plans, done right."
+    lede="We provide the IRS-compliant documentation and administrative support business owners need to establish, maintain, amend, or terminate their self-directed 401(k) plans with confidence."
+  >
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:32px">
+      <a href="/forms" class="button">Find a form<Icon name="arrowRight" size={17} /></a>
+      <a href="/contact" class="button button-secondary">Talk to the team</a>
+    </div>
+  </PageHero>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Services</span>
+          <h2>We build and support self-directed<br />401(k) plans the right way.</h2>
+        </div>
+      </div>
+      <div class="grid-3">
+        {
+          planServices.map((s) => (
+            <div class="card">
+              <span class="icon-box" style="background:#fff; margin-bottom:20px"><Icon name="fileCheck" size={22} stroke={1.5} /></span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--cream)">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">A little upkeep</span>
+          <h2>Keep your plan current.</h2>
+        </div>
+        <p>Business changed? Records need attention? Start with what needs attention today.</p>
+      </div>
+      <div class="row-list upkeep">
+        {upkeep.map((f) => <FormRow form={f} />)}
+      </div>
+    </div>
+  </section>
+
+  <Faq />
+  <HelpBand />
+</SiteLayout>
+
+<style>
+  .upkeep :global(.form-row) {
+    background: #fff;
+  }
+  .upkeep :global(.form-row .icon-box),
+  .upkeep :global(.row-time) {
+    background: var(--cream);
+  }
+</style>

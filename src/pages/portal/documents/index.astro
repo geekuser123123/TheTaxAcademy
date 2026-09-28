@@ -1,0 +1,55 @@
+---
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import DocumentTable from '../../../components/portal/DocumentTable.astro';
+import UploadForm from '../../../components/portal/UploadForm.astro';
+import { isTeam } from '../../../lib/auth';
+import { listDocuments, uploadDocument } from '../../../lib/portal';
+import { notifyTeam } from '../../../lib/notify';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+if (isTeam(user)) return Astro.redirect('/portal/admin');
+
+let error = '';
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  error = (await uploadDocument(data, user.id, user)) ?? '';
+  if (!error) {
+    await notifyTeam(
+      `New upload from ${user.name}`,
+      `${user.name} (${user.email}) uploaded a document.\n\n${new URL(`/portal/admin/clients/${user.id}`, Astro.url)}`,
+    );
+    return Astro.redirect('/portal/documents?uploaded=1', 303);
+  }
+}
+
+const documents = await listDocuments(user.id);
+---
+
+<PortalLayout title="Documents">
+  <div class="page-head">
+    <div>
+      <h1>Documents</h1>
+      <p>Your plan documents and anything you’ve shared with the team.</p>
+    </div>
+  </div>
+  <div class="panel-grid">
+    <div class="panel">
+      {
+        Astro.url.searchParams.has('uploaded') && (
+          <div class="alert" style="margin-bottom:16px">
+            <Icon name="check" size={18} />
+            Uploaded. The team can see it now.
+          </div>
+        )
+      }
+      <DocumentTable documents={documents} viewer={user} />
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Send the team a file</h2></div>
+      <UploadForm error={error} />
+    </div>
+  </div>
+</PortalLayout>

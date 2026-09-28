@@ -1,0 +1,136 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { isTeam } from '../../lib/auth';
+import { listDocuments, listMessages, listClientSubmissions } from '../../lib/portal';
+import { formatDate, formatDateTime } from '../../lib/format';
+import { getForm } from '../../data/forms';
+import { site } from '../../data/site';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+if (isTeam(user)) return Astro.redirect('/portal/admin');
+
+const [documents, messages, requests] = await Promise.all([
+  listDocuments(user.id),
+  listMessages(user.id),
+  listClientSubmissions(user.id, user.email),
+]);
+const unread = messages.filter((m) => m.author_id !== user.id && !m.read_at).length;
+const openRequests = requests.filter((r) => r.status !== 'done').length;
+const lastMessage = messages.at(-1);
+const firstName = user.name.split(' ')[0];
+---
+
+<PortalLayout title="Overview">
+  <div class="page-head">
+    <div>
+      <h1>Good to see you, {firstName}.</h1>
+      <p>Here’s what’s happening with your plan.</p>
+    </div>
+    <a href="/portal/messages" class="button"><Icon name="messageCircle" size={17} />Message the team</a>
+  </div>
+
+  <div class="stats">
+    <a class="stat" href="/portal/documents">
+      <span class="icon-box"><Icon name="folder" size={22} /></span>
+      <span><strong>{documents.length}</strong><small>Documents</small></span>
+    </a>
+    <a class="stat" href="/portal/messages">
+      <span class="icon-box"><Icon name="messageCircle" size={22} /></span>
+      <span><strong>{unread}</strong><small>Unread messages</small></span>
+    </a>
+    <a class="stat" href="/portal/requests">
+      <span class="icon-box"><Icon name="inbox" size={22} /></span>
+      <span><strong>{openRequests}</strong><small>Open requests</small></span>
+    </a>
+  </div>
+
+  <div class="panel-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Recent documents</h2>
+          <a href="/portal/documents" class="text-link small">All documents</a>
+        </div>
+        {
+          documents.length === 0 ? (
+            <div class="empty">
+              <span class="icon-box"><Icon name="folder" size={22} /></span>
+              <p>No documents yet. When the team shares plan documents, they’ll appear here.</p>
+            </div>
+          ) : (
+            <div class="table-wrap">
+              <table class="table">
+                <tbody>
+                  {documents.slice(0, 5).map((d) => (
+                    <tr>
+                      <td>
+                        <a href={`/portal/documents/${d.id}`}>{d.title}</a>
+                        <div class="small muted">{d.category}</div>
+                      </td>
+                      <td class="small muted">{formatDate(d.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Your requests</h2>
+          <a href="/forms" class="text-link small">New request</a>
+        </div>
+        {
+          requests.length === 0 ? (
+            <p class="muted small">Requests you send through the forms on the site will show up here.</p>
+          ) : (
+            <div class="table-wrap">
+              <table class="table">
+                <tbody>
+                  {requests.slice(0, 5).map((r) => (
+                    <tr>
+                      <td>{getForm(r.form_slug)?.title ?? r.form_slug}</td>
+                      <td class="small muted">{formatDate(r.created_at)}</td>
+                      <td><span class={`badge badge-${r.status}`}>{r.status.replace('_', ' ')}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-head"><h2>Latest message</h2></div>
+        {
+          lastMessage ? (
+            <div class="stack">
+              <div class:list={['bubble', { mine: lastMessage.author_id === user.id }]}>
+                <small>{lastMessage.author_id === user.id ? 'You' : lastMessage.author_name} · {formatDateTime(lastMessage.created_at)}</small>
+                <p>{lastMessage.body.length > 280 ? `${lastMessage.body.slice(0, 280)}…` : lastMessage.body}</p>
+              </div>
+              <a href="/portal/messages" class="text-link small">Open conversation<Icon name="arrowRight" size={14} /></a>
+            </div>
+          ) : (
+            <p class="muted small">No messages yet. Questions about your plan? Start a conversation with the team.</p>
+          )
+        }
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Need something?</h2></div>
+        <div class="stack small">
+          <a href="/forms/document-request" class="text-link">Request a document</a>
+          <a href="/forms/plan-amendment" class="text-link">Plan amendment or update</a>
+          <a href="/renewals" class="text-link">Renewals</a>
+          <p class="muted">Or call us at <a href={site.phoneHref}>{site.phone}</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</PortalLayout>

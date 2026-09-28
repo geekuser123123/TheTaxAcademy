@@ -1,0 +1,745 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Icon from '../components/Icon.astro';
+import FormRow from '../components/FormRow.astro';
+import Faq from '../components/Faq.astro';
+import HelpBand from '../components/HelpBand.astro';
+import RequestFormFields from '../components/RequestFormFields.astro';
+import { forms, getForm } from '../data/forms';
+import { serviceCategories } from '../data/services';
+import { site } from '../data/site';
+
+const featured = forms.filter((f) => f.featured);
+const contactForm = getForm('contact-team')!;
+---
+
+<SiteLayout>
+  <!-- Hero -->
+  <section class="hero on-dark">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="welcome-label"><span></span>Your client home base</div>
+        <h1>Good to see you.<br />Let’s take care of your plan.</h1>
+        <p>The forms you need. The support you know. A clear place to take your next step.</p>
+        <div class="actions">
+          <a href="/forms" class="button">Find a form<Icon name="arrowRight" size={17} /></a>
+          <a href="/contact" class="button button-secondary">Get in touch</a>
+        </div>
+        <div class="familiar">
+          <span><Icon name="users" size={18} /></span>
+          <p>Worked with {site.team}?<br /><strong>You’re in the right place.</strong></p>
+        </div>
+      </div>
+
+      <div class="start-panel">
+        <div class="start-heading">
+          <span class="icon-box"><Icon name="house" size={24} stroke={1.5} /></span>
+          <div>
+            <span class="eyebrow">Make yourself at home</span>
+            <h2>How can we help today?</h2>
+          </div>
+        </div>
+        <a href="/forms" class="start-row">
+          <Icon name="fileText" size={22} stroke={1.6} />
+          <span><strong>I need a form</strong><small>Documents, updates, and requests.</small></span>
+          <Icon name="arrowUpRight" size={18} />
+        </a>
+        <a href="/renewals" class="start-row">
+          <Icon name="refreshCw" size={22} stroke={1.6} />
+          <span><strong>It’s time to renew</strong><small>Take care of ongoing plan support.</small></span>
+          <Icon name="arrowUpRight" size={18} />
+        </a>
+        <a href="/forms/contact-team" class="start-row">
+          <Icon name="messageCircle" size={22} stroke={1.6} />
+          <span><strong>I have a question</strong><small>Start with a real person on the team.</small></span>
+          <Icon name="arrowUpRight" size={18} />
+        </a>
+        <div class="portal-panel">
+          <Icon name="lockKeyhole" size={20} />
+          <div>
+            <h3>Your private client portal</h3>
+            <p>Documents, messages, and ongoing work.</p>
+            <a href="/portal">Enter my portal<Icon name="arrowRight" size={16} /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container pillars">
+      <div class="pillars-intro">
+        <span class="eyebrow">The Tax Academy</span>
+        <h2>Supporting your retirement strategy</h2>
+        <p>IRS-compliant documentation and support for self-directed 401(k) plans.</p>
+      </div>
+      <div class="pillar">
+        <Icon name="fileCheck" size={26} stroke={1.5} />
+        <h3>Documentation accuracy</h3>
+        <p>Plan documents prepared with precision, so your paperwork is complete and properly structured.</p>
+      </div>
+      <div class="pillar">
+        <Icon name="shieldCheck" size={26} stroke={1.5} />
+        <h3>Regulatory compliance</h3>
+        <p>Required amendments, restatements, and regulatory updates that keep your plan compliant over time.</p>
+      </div>
+      <div class="pillar">
+        <Icon name="users" size={26} stroke={1.5} />
+        <h3>Administrative support</h3>
+        <p>Consistent support and documentation guidance throughout the full lifecycle of your plan.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="assurance">
+    <div class="container">
+      <span><Icon name="fileText" size={17} />Forms without portal sign-in</span>
+      <span><Icon name="users" size={17} />A team to guide the next step</span>
+      <span><Icon name="clipboardCheck" size={17} />Clear scope before new work</span>
+    </div>
+  </div>
+
+  <!-- Forms -->
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Let’s get it done</span>
+          <h2>A few things you can<br />take care of right here.</h2>
+        </div>
+        <a href="/forms" class="text-link">View all forms<Icon name="arrowRight" size={16} /></a>
+      </div>
+      <div class="home-tools">
+        <div class="row-list">
+          {featured.map((form) => <FormRow form={form} />)}
+        </div>
+        <div class="checkin on-dark">
+          <span class="icon-box"><Icon name="clipboardCheck" size={27} stroke={1.4} /></span>
+          <h3>A little upkeep.<br />A lot more clarity.</h3>
+          <p>Business changed? Records need attention? Catch up on the essentials that keep your next step organized.</p>
+          <a href="/plan-support" class="text-link">Visit plan support<Icon name="arrowRight" size={16} /></a>
+          <div class="checkin-foot"><Icon name="clock" size={15} />Start with what needs attention today.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Renewals -->
+  <section class="section renewals-home">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Renewals</span>
+          <h2>Everything you need<br />to stay compliant.</h2>
+        </div>
+        <a href="/renewals" class="text-link">About renewals<Icon name="arrowRight" size={16} /></a>
+      </div>
+      <div class="grid-2">
+        <div class="renew-card">
+          <span class="eyebrow">Business compliance</span>
+          <h3>Statutory agent renewal</h3>
+          <p>Keep your LLC or corporation in good standing with on-time statutory agent renewals and state-required filings.</p>
+          <a href="/forms/renewal" class="button button-sm">Renew now</a>
+        </div>
+        <div class="renew-card renew-card-dark on-dark">
+          <span class="eyebrow">Plan administration</span>
+          <h3>401(k) annual license</h3>
+          <p>Annual IRS-compliant documentation and administrative support to keep your self-directed 401(k) properly maintained.</p>
+          <a href="/forms/renewal" class="button button-sm">Renew now</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Explore services -->
+  <section class="slant on-dark">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">When you’re ready for more</span>
+          <h2>You have a plan.<br />What would you like to do with it?</h2>
+        </div>
+        <p>From a first rental property to a complex trust or business structure, start with the result you want.</p>
+      </div>
+      <div class="family-grid">
+        {
+          serviceCategories.map((c) => (
+            <a href={`/services/${c.slug}`} class="family-card">
+              <Icon name={c.icon} size={23} stroke={1.6} />
+              <h3>{c.title}</h3>
+              <p>{c.summary}</p>
+              <Icon name="arrowUpRight" size={18} class="family-arrow" />
+            </a>
+          ))
+        }
+        <a href="/forms/advanced-planning" class="family-card family-personal">
+          <Icon name="messageCircle" size={23} stroke={1.5} />
+          <h3>Something a little different?</h3>
+          <p>You don’t need the name of a service. Bring us the idea.</p>
+          <Icon name="arrowUpRight" size={18} class="family-arrow" />
+        </a>
+      </div>
+      <div class="section-bottom">
+        <span>Some advanced work applies outside a retirement plan, too.</span>
+        <a href="/services" class="text-link">Explore all services<Icon name="arrowRight" size={16} /></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Relationship -->
+  <section class="section">
+    <div class="container welcome-grid">
+      <div>
+        <span class="eyebrow">Familiar people. A clearer process.</span>
+        <h2>The relationship matters.<br />So does making things easier.</h2>
+        <p class="lede">
+          If you’ve worked with {site.team} over the years, welcome home. This is a simpler way to reach the team, find your
+          forms, and keep things moving.
+        </p>
+        <p class="lede">
+          For more involved work, we bring the right attorney or professional into a defined project, with expectations
+          agreed before it begins.
+        </p>
+        <a href="/how-it-works" class="text-link">How we work together<Icon name="arrowRight" size={16} /></a>
+      </div>
+      <div class="steps">
+        <div>
+          <span>01</span>
+          <div><h3>Tell us what you need</h3><p>A form, a question, or an idea. Start where you are.</p></div>
+        </div>
+        <div>
+          <span>02</span>
+          <div><h3>Get the right review</h3><p>The team organizes the facts and who needs to help.</p></div>
+        </div>
+        <div>
+          <span>03</span>
+          <div><h3>Agree on the work</h3><p>Scope, fees, and next steps are clear before work starts.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="contact-band on-dark">
+    <div class="container contact-grid">
+      <div>
+        <span class="eyebrow">Get in touch</span>
+        <h2>Have questions?<br />Let’s talk.</h2>
+        <p class="lede">Send a note and a real person on the team will follow up. Prefer the phone? We’re happy to talk.</p>
+        <a href={site.phoneHref} class="contact-phone"><Icon name="phone" size={18} />{site.phone}</a>
+      </div>
+      <div class="contact-card">
+        <h3>Send us a message</h3>
+        <RequestFormFields form={contactForm} compact />
+      </div>
+    </div>
+  </section>
+
+  <Faq />
+  <HelpBand />
+</SiteLayout>
+
+<style>
+  /* Hero */
+  .hero {
+    position: relative;
+    background:
+      radial-gradient(900px 500px at 85% 10%, rgba(31, 154, 75, 0.28), transparent 60%),
+      radial-gradient(700px 400px at 0% 100%, rgba(116, 191, 68, 0.12), transparent 60%),
+      var(--ink);
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    left: -160px;
+    bottom: 120px;
+    width: 640px;
+    height: 640px;
+    background: url('/images/seal.png') center / contain no-repeat;
+    opacity: 0.045;
+    pointer-events: none;
+  }
+
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: clamp(32px, 6vw, 80px);
+    align-items: center;
+    padding-block: clamp(56px, 8vw, 104px);
+  }
+
+  .welcome-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    color: var(--lime);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .welcome-label span {
+    width: 28px;
+    height: 2px;
+    background: var(--lime);
+  }
+
+  .hero h1 {
+    font-size: clamp(2.6rem, 6.4vw, 5.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    font-weight: 600;
+  }
+
+  .hero-copy > p {
+    max-width: 44ch;
+    margin-top: 24px;
+    color: var(--muted-on-dark);
+    font-size: 1.15rem;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .familiar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line-dark);
+    color: var(--muted-on-dark);
+    font-size: 0.95rem;
+  }
+
+  .familiar strong {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .familiar > span {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(116, 191, 68, 0.15);
+    color: var(--lime);
+  }
+
+  .start-panel {
+    padding: 28px;
+    border-radius: 20px;
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .start-heading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .start-heading .eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .start-heading h2 {
+    font-size: 1.4rem;
+  }
+
+  .start-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 4px;
+    border-top: 1px solid var(--line);
+    text-decoration: none;
+  }
+
+  .start-row > :global(.icon:first-child) {
+    color: var(--green);
+  }
+
+  .start-row > :global(.icon:last-child) {
+    color: var(--muted);
+    transition: transform 0.15s ease;
+  }
+
+  .start-row:hover > :global(.icon:last-child) {
+    transform: translate(2px, -2px);
+    color: var(--ink);
+  }
+
+  .start-row strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  .start-row small {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .portal-panel {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 20px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .portal-panel > :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--lime);
+  }
+
+  .portal-panel h3 {
+    font-size: 1rem;
+  }
+
+  .portal-panel p {
+    color: var(--muted-on-dark);
+    font-size: 0.9rem;
+    margin: 2px 0 10px;
+  }
+
+  .portal-panel a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lime);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  /* Pillars (reference: "Supporting your retirement strategy") */
+  .pillars {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.2fr repeat(3, 1fr);
+    border-top: 1px solid var(--line-dark);
+  }
+
+  .pillars > div {
+    padding: 40px 28px 56px;
+  }
+
+  .pillars > div + div {
+    border-left: 1px solid var(--line-dark);
+  }
+
+  .pillars-intro {
+    padding-left: 0 !important;
+  }
+
+  .pillars-intro h2 {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+  }
+
+  .pillars p {
+    color: var(--muted-on-dark);
+    font-size: 0.925rem;
+  }
+
+  .pillar :global(.icon) {
+    color: var(--lime);
+    margin-bottom: 18px;
+  }
+
+  .pillar h3 {
+    margin-bottom: 8px;
+  }
+
+  /* Assurance strip */
+  .assurance {
+    background: var(--cream);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .assurance .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 40px;
+    padding-block: 18px;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .assurance span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .assurance :global(.icon) {
+    color: var(--green);
+  }
+
+  /* Forms + check-in */
+  .home-tools {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+  }
+
+  .checkin {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 32px;
+    border-radius: var(--radius);
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .checkin h3 {
+    font-size: 1.6rem;
+  }
+
+  .checkin p {
+    color: var(--muted-on-dark);
+  }
+
+  .checkin-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-dark);
+    width: 100%;
+    color: var(--muted-on-dark);
+    font-size: 0.85rem;
+  }
+
+  /* Renewals */
+  .renewals-home {
+    padding-top: 0;
+  }
+
+  .renew-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 300px;
+    padding: 32px;
+    border-radius: 4px;
+    background: var(--cream);
+  }
+
+  .renew-card h3 {
+    margin-top: auto;
+    font-size: 1.6rem;
+  }
+
+  .renew-card p {
+    margin: 14px 0 22px;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .renew-card-dark {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .renew-card-dark p {
+    color: var(--muted-on-dark);
+  }
+
+  /* Service families */
+  .family-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .family-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 28px;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--text);
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .family-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .family-card > :global(.icon:first-child) {
+    margin-bottom: 12px;
+    color: var(--green);
+  }
+
+  .family-card p {
+    color: var(--muted);
+    font-size: 0.925rem;
+  }
+
+  .family-card :global(.family-arrow) {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    color: var(--muted);
+  }
+
+  .family-personal {
+    background: var(--lime);
+  }
+
+  .family-personal p,
+  .family-personal :global(.icon) {
+    color: var(--ink) !important;
+  }
+
+  .section-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+    color: var(--muted-on-dark);
+  }
+
+  /* Welcome */
+  .welcome-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(32px, 6vw, 96px);
+    align-items: center;
+  }
+
+  .welcome-grid h2 {
+    margin-bottom: 20px;
+  }
+
+  .welcome-grid .lede {
+    margin-bottom: 16px;
+  }
+
+  .welcome-grid .text-link {
+    margin-top: 8px;
+  }
+
+  /* Contact band (reference: "Have Questions? Get in Touch!") */
+  .contact-band {
+    background:
+      radial-gradient(800px 400px at 10% 0%, rgba(31, 154, 75, 0.25), transparent 60%),
+      var(--ink-2);
+    color: #fff;
+    padding-block: clamp(64px, 9vw, 112px);
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(32px, 6vw, 96px);
+    align-items: center;
+  }
+
+  .contact-grid h2 {
+    font-size: clamp(2.2rem, 4.4vw, 3.5rem);
+    margin-bottom: 20px;
+  }
+
+  .contact-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 28px;
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .contact-phone :global(.icon) {
+    color: var(--lime);
+  }
+
+  .contact-card {
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--text);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .contact-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 1020px) {
+    .hero-grid,
+    .home-tools,
+    .welcome-grid,
+    .contact-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .pillars {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .pillars > div:nth-child(3) {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .pillars > div:nth-child(n + 3) {
+      border-top: 1px solid var(--line-dark);
+    }
+
+    .family-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .pillars,
+    .family-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .pillars > div {
+      padding: 28px 0;
+      border-left: 0 !important;
+    }
+
+    .pillars > div + div {
+      border-top: 1px solid var(--line-dark);
+    }
+
+    .start-panel {
+      padding: 20px;
+    }
+  }
+</style>

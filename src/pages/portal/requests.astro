@@ -1,0 +1,55 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { isTeam } from '../../lib/auth';
+import { listClientSubmissions } from '../../lib/portal';
+import { formatDate } from '../../lib/format';
+import { getForm } from '../../data/forms';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+if (isTeam(user)) return Astro.redirect('/portal/admin/submissions');
+
+const requests = await listClientSubmissions(user.id, user.email);
+---
+
+<PortalLayout title="My requests">
+  <div class="page-head">
+    <div>
+      <h1>My requests</h1>
+      <p>Forms you’ve sent us using {user.email}.</p>
+    </div>
+    <a href="/forms" class="button"><Icon name="plus" size={17} />New request</a>
+  </div>
+  <div class="panel">
+    {
+      requests.length === 0 ? (
+        <div class="empty">
+          <span class="icon-box"><Icon name="inbox" size={22} /></span>
+          <p>No requests yet.</p>
+        </div>
+      ) : (
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Request</th><th>Sent</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {requests.map((r) => (
+                <tr>
+                  <td>
+                    <strong>{getForm(r.form_slug)?.title ?? r.form_slug}</strong>
+                    {r.plan_name && <div class="small muted">{r.plan_name}</div>}
+                  </td>
+                  <td class="small muted">{formatDate(r.created_at)}</td>
+                  <td><span class={`badge badge-${r.status}`}>{r.status.replace('_', ' ')}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </div>
+</PortalLayout>

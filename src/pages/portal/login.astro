@@ -1,0 +1,88 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { createSession, destroySession, verifyPassword, isTeam } from '../../lib/auth';
+import { db, type UserRow } from '../../lib/db';
+import { str } from '../../lib/format';
+
+export const prerender = false;
+
+const safeNext = (n: string | null) => (n && n.startsWith('/portal') && !n.startsWith('//') ? n : null);
+const nextParam = safeNext(Astro.url.searchParams.get('next'));
+
+// No admin yet? Send the first visitor to setup.
+const anyAdmin = await db().prepare("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1").first();
+if (!anyAdmin) return Astro.redirect('/portal/setup');
+
+if (Astro.locals.user && Astro.request.method === 'GET') {
+  return Astro.redirect(nextParam ?? (isTeam(Astro.locals.user) ? '/portal/admin' : '/portal'));
+}
+
+let error = '';
+let email = '';
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  email = str(data.get('email'), 200);
+  const password = typeof data.get('password') === 'string' ? (data.get('password') as string) : '';
+  const user = await db()
+    .prepare('SELECT * FROM users WHERE email = ? AND is_active = 1')
+    .bind(email)
+    .first<UserRow>();
+  if (user && (await verifyPassword(password, user.password_hash))) {
+    await destroySession(Astro.cookies);
+    await createSession(Astro.cookies, user.id);
+    const home = user.role === 'client' ? '/portal' : '/portal/admin';
+    return Astro.redirect(safeNext(str(data.get('next'), 500)) ?? home, 303);
+  }
+  error = 'That email and password don’t match an active account.';
+}
+
+const notice = Astro.url.searchParams.get('notice');
+---
+
+<PortalLayout title="Sign in" bare>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p>Sign in to your private client portal.</p>
+    {
+      notice === 'password-set' && (
+        <div class="alert" style="margin-bottom:18px">
+          <Icon name="check" size={18} />
+          Your password is set. Sign in to continue.
+        </div>
+      )
+    }
+    {
+      notice === 'signed-out' && (
+        <div class="alert" style="margin-bottom:18px">
+          <Icon name="check" size={18} />
+          You’ve been signed out.
+        </div>
+      )
+    }
+    {
+      error && (
+        <div class="alert alert-error" role="alert" style="margin-bottom:18px">
+          <Icon name="circleAlert" size={18} />
+          {error}
+        </div>
+      )
+    }
+    <form method="post">
+      <input type="hidden" name="next" value={nextParam ?? ''} />
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required value={email} />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+      </div>
+      <button class="button" type="submit">Sign in<Icon name="arrowRight" size={17} /></button>
+    </form>
+    <p class="auth-help">
+      New client or forgot your password? The team will send you a secure link.{' '}
+      <a href="/forms/contact-team">Ask for portal access</a>.
+    </p>
+  </div>
+</PortalLayout>

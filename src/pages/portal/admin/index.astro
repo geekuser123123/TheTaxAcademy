@@ -1,0 +1,241 @@
+---
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import CopyLink from '../../../components/portal/CopyLink.astro';
+import { createAuthLink } from '../../../lib/auth';
+import { db, newId, type UserRow } from '../../../lib/db';
+import { formatDate, isEmail, str } from '../../../lib/format';
+
+export const prerender = false;
+
+const me = Astro.locals.user!;
+const isAdmin = me.role === 'admin';
+
+let error = '';
+let created: { name: string; link: string; purpose: string } | null = null;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const action = str(data.get('action'), 40);
+
+  if (action === 'create-user') {
+    const name = str(data.get('name'), 120);
+    const email = str(data.get('email'), 200).toLowerCase();
+    const company = str(data.get('company'), 200);
+    const phone = str(data.get('phone'), 40);
+    const requestedRole = str(data.get('role'), 10);
+    const role = isAdmin && (requestedRole === 'staff' || requestedRole === 'admin') ? requestedRole : 'client';
+    if (!name || !isEmail(email)) error = 'Enter a name and a valid email.';
+    else if (await db().prepare('SELECT 1 FROM users WHERE email = ?').bind(email).first()) {
+      error = 'Someone with that email already has an account.';
+    } else {
+      const id = newId();
+      await db()
+        .prepare('INSERT INTO users (id, email, name, company, phone, role) VALUES (?, ?, ?, ?, ?, ?)')
+        .bind(id, email, name, company || null, phone || null, role)
+        .run();
+      // Link earlier public form requests from this email to the new client.
+      if (role === 'client') {
+        await db().prepare('UPDATE submissions SET client_id = ? WHERE email = ? AND client_id IS NULL').bind(id, email).run();
+      }
+      created = { name, link: await createAuthLink(Astro.url.origin, id, 'invite'), purpose: 'invite' };
+    }
+  }
+
+  if (isAdmin && action === 'team-reset') {
+    const target = await db()
+      .prepare("SELECT id, name FROM users WHERE id = ? AND role != 'client'")
+      .bind(str(data.get('user_id'), 60))
+      .first<{ id: string; name: string }>();
+    if (target) created = { name: target.name, link: await createAuthLink(Astro.url.origin, target.id, 'reset'), purpose: 'reset' };
+  }
+
+  if (isAdmin && action === 'team-toggle') {
+    const targetId = str(data.get('user_id'), 60);
+    if (targetId !== me.id) {
+      await db().prepare("UPDATE users SET is_active = 1 - is_active WHERE id = ? AND role != 'client'").bind(targetId).run();
+      await db().prepare('DELETE FROM sessions WHERE user_id = ?').bind(targetId).run();
+    }
+  }
+}
+
+const q = str(Astro.url.searchParams.get('q'), 100);
+const like = `%${q}%`;
+const { results: clients } = await db()
+  .prepare(
+    `SELECT u.*,
+            (SELECT COUNT(*) FROM documents d WHERE d.client_id = u.id) AS doc_count,
+            (SELECT COUNT(*) FROM messages m WHERE m.client_id = u.id AND m.author_id = u.id AND m.read_at IS NULL) AS unread,
+            (SELECT MAX(created_at) FROM messages m WHERE m.client_id = u.id) AS last_message_at
+       FROM users u
+      WHERE u.role = 'client' AND (? = '' OR u.name LIKE ? OR u.email LIKE ? OR u.company LIKE ?)
+      ORDER BY unread DESC, COALESCE(last_message_at, u.created_at) DESC
+      LIMIT 200`,
+  )
+  .bind(q, like, like, like)
+  .all<UserRow & { doc_count: number; unread: number; last_message_at: string | null }>();
+
+const { results: team } = await db()
+  .prepare("SELECT * FROM users WHERE role != 'client' ORDER BY role, name")
+  .all<UserRow>();
+
+const counts = await db()
+  .prepare(
+    `SELECT
+       (SELECT COUNT(*) FROM users WHERE role = 'client' AND is_active = 1) AS clients,
+       (SELECT COUNT(*) FROM submissions WHERE status = 'new') AS new_requests,
+       (SELECT COUNT(*) FROM messages m JOIN users u ON u.id = m.author_id WHERE u.role = 'client' AND m.read_at IS NULL) AS unread`,
+  )
+  .first<{ clients: number; new_requests: number; unread: number }>();
+---
+
+<PortalLayout title="Clients">
+  <div class="page-head">
+    <div>
+      <h1>Team workspace</h1>
+      <p>Clients, documents, messages, and incoming requests.</p>
+    </div>
+    <a href="#new-client" class="button"><Icon name="userPlus" size={17} />Add client</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="icon-box"><Icon name="users" size={22} /></span>
+      <span><strong>{counts?.clients ?? 0}</strong><small>Active clients</small></span>
+    </div>
+    <a class="stat" href="/portal/admin/submissions">
+      <span class="icon-box"><Icon name="inbox" size={22} /></span>
+      <span><strong>{counts?.new_requests ?? 0}</strong><small>New form requests</small></span>
+    </a>
+    <div class="stat">
+      <span class="icon-box"><Icon name="messageCircle" size={22} /></span>
+      <span><strong>{counts?.unread ?? 0}</strong><small>Unread client messages</small></span>
+    </div>
+  </div>
+
+  {
+    created && (
+      <div class="panel" style="margin-bottom:20px; border-color: var(--lime)">
+        <div class="panel-head">
+          <h2>{created.purpose === 'invite' ? `Account created for ${created.name}` : `Reset link for ${created.name}`}</h2>
+        </div>
+        <p class="small muted">
+          Send this private link by email or text. It works once and expires in {created.purpose === 'invite' ? '7 days' : '24 hours'}.
+          It won’t be shown again, but you can create a new one any time.
+        </p>
+        <CopyLink value={created.link} />
+      </div>
+    )
+  }
+
+  <div class="panel-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Clients</h2>
+        <form method="get" style="display:flex; gap:8px">
+          <input class="input" type="search" name="q" value={q} placeholder="Search name, email, company" aria-label="Search clients" style="min-height:38px" />
+        </form>
+      </div>
+      {
+        clients.length === 0 ? (
+          <div class="empty">
+            <span class="icon-box"><Icon name="users" size={22} /></span>
+            <p>{q ? 'No clients match that search.' : 'No clients yet. Add your first client to send them an invitation.'}</p>
+          </div>
+        ) : (
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr><th>Client</th><th>Docs</th><th>Last sign-in</th><th /></tr>
+              </thead>
+              <tbody>
+                {clients.map((c) => (
+                  <tr>
+                    <td>
+                      <a href={`/portal/admin/clients/${c.id}`}>{c.name}</a>
+                      <div class="small muted">{c.company ? `${c.company} · ` : ''}{c.email}</div>
+                    </td>
+                    <td class="small">{c.doc_count}</td>
+                    <td class="small muted">{c.password_hash ? formatDate(c.last_login_at) : 'Invite pending'}</td>
+                    <td>
+                      {c.unread > 0 && <span class="badge badge-new">{c.unread} new</span>}
+                      {!c.is_active && <span class="badge badge-done">inactive</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+
+    <div>
+      <div class="panel" id="new-client">
+        <div class="panel-head"><h2>Add a client</h2></div>
+        {
+          error && (
+            <div class="alert alert-error" role="alert" style="margin-bottom:16px">
+              <Icon name="circleAlert" size={18} />
+              {error}
+            </div>
+          )
+        }
+        <form method="post" class="stack">
+          <input type="hidden" name="action" value="create-user" />
+          <div class="field"><label for="n">Name</label><input id="n" name="name" required maxlength="120" /></div>
+          <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required maxlength="200" /></div>
+          <div class="field"><label for="c">Company / plan</label><input id="c" name="company" maxlength="200" /></div>
+          <div class="field"><label for="p">Phone</label><input id="p" name="phone" type="tel" maxlength="40" /></div>
+          {
+            isAdmin && (
+              <div class="field">
+                <label for="r">Account type</label>
+                <select id="r" name="role">
+                  <option value="client">Client</option>
+                  <option value="staff">Team member</option>
+                  <option value="admin">Team admin</option>
+                </select>
+              </div>
+            )
+          }
+          <div><button class="button" type="submit"><Icon name="userPlus" size={17} />Create & get invite link</button></div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Team</h2></div>
+        <div class="table-wrap">
+          <table class="table">
+            <tbody>
+              {team.map((t) => (
+                <tr>
+                  <td>
+                    <strong>{t.name}</strong>
+                    <div class="small muted">{t.email} · {t.role}{!t.is_active && ' · inactive'}</div>
+                  </td>
+                  <td>
+                    {isAdmin && t.id !== me.id && (
+                      <div class="row-actions">
+                        <form method="post" class="inline-form">
+                          <input type="hidden" name="action" value="team-reset" />
+                          <input type="hidden" name="user_id" value={t.id} />
+                          <button class="icon-button" title="Create password link" aria-label={`Create password link for ${t.name}`}><Icon name="keyRound" size={17} /></button>
+                        </form>
+                        <form method="post" class="inline-form">
+                          <input type="hidden" name="action" value="team-toggle" />
+                          <input type="hidden" name="user_id" value={t.id} />
+                          <button class="button button-sm button-secondary">{t.is_active ? 'Deactivate' : 'Activate'}</button>
+                        </form>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</PortalLayout>

@@ -1,0 +1,87 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import HelpBand from '../components/HelpBand.astro';
+---
+
+<SiteLayout title="Renewals" description="Renew your 401(k) annual license and statutory agent service.">
+  <PageHero
+    eyebrow="Renewals"
+    title="Everything you need to stay compliant."
+    lede="Two annual renewals keep your plan and your business in good standing. Let us know what you’re renewing and we’ll send the details."
+  />
+  <section class="section">
+    <div class="container grid-2">
+      <div class="renew card">
+        <span class="eyebrow">Plan administration</span>
+        <h2>401(k) annual license</h2>
+        <p>Annual IRS-compliant documentation and administrative support to keep your self-directed 401(k) properly maintained.</p>
+        <ul>
+          <li><Icon name="check" size={16} />Access to your current plan documents</li>
+          <li><Icon name="check" size={16} />Required amendments as rules change</li>
+          <li><Icon name="check" size={16} />Ongoing support from the team</li>
+        </ul>
+        <a href="/forms/renewal" class="button">Renew now<Icon name="arrowRight" size={17} /></a>
+      </div>
+      <div class="renew card on-dark" style="background:var(--ink); color:#fff">
+        <span class="eyebrow">Business compliance</span>
+        <h2>Statutory agent renewal</h2>
+        <p>Keep your LLC or corporation in good standing with on-time statutory agent renewals and state-required filings.</p>
+        <ul>
+          <li><Icon name="check" size={16} />Registered/statutory agent service</li>
+          <li><Icon name="check" size={16} />Reminders before deadlines</li>
+          <li><Icon name="check" size={16} />Help with state-required filings</li>
+        </ul>
+        <a href="/forms/renewal" class="button">Renew now<Icon name="arrowRight" size={17} /></a>
+      </div>
+    </div>
+    <div class="container">
+      <p class="muted small" style="margin-top:24px">
+        Not sure what’s included in your agreement? See <a href="/included">service coverage</a>.
+      </p>
+    </div>
+  </section>
+  <HelpBand />
+</SiteLayout>
+
+<style>
+  .renew {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 36px;
+  }
+  .renew h2 {
+    font-size: 1.8rem;
+  }
+  .on-dark p {
+    color: var(--muted-on-dark);
+  }
+  .renew ul {
+    display: grid;
+    gap: 8px;
+    margin: 4px 0 12px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+  }
+  .renew li {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .renew li :global(.icon) {
+    color: var(--green);
+  }
+  .on-dark li :global(.icon) {
+    color: var(--lime);
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .small {
+    font-size: 0.9rem;
+  }
+</style>

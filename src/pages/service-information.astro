@@ -1,0 +1,31 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { disclaimer } from '../data/site';
+---
+
+<SiteLayout title="Service information">
+  <PageHero eyebrow="Legal" title="Service information" lede="What The Tax Academy does, and what it doesn’t." />
+  <section class="section">
+    <div class="container prose">
+      <p>{disclaimer}</p>
+      <h2>Educational materials</h2>
+      <p>
+        Videos, guides, and other materials on this site are provided for general education. Nothing on this site, in our
+        courses, forms, documents, or communications should be construed as legal, tax, accounting, investment, or
+        financial advice, or as a recommendation to engage in any investment, transaction, or retirement strategy.
+      </p>
+      <h2>Your responsibilities</h2>
+      <p>
+        Plan owners and trustees remain responsible for plan operation and compliance, and for consulting their own
+        qualified legal, tax, accounting, and financial advisors. Investments involve risk, including possible loss of
+        principal.
+      </p>
+      <h2>Separately scoped work</h2>
+      <p>
+        Individual legal, tax, and other professional work is scoped separately with the appropriate provider. Your
+        service agreement controls included coverage. See <a href="/included">service coverage</a> for a general overview.
+      </p>
+    </div>
+  </section>
+</SiteLayout>

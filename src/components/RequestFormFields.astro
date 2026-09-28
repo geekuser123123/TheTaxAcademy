@@ -1,0 +1,118 @@
+---
+// Renders a public request form that posts to /api/submit.
+// Works without JavaScript; errors come back as ?error=<code> on the same page.
+import Icon from './Icon.astro';
+import type { RequestForm } from '../data/forms';
+
+interface Props {
+  form: RequestForm;
+  compact?: boolean;
+}
+
+const { form, compact = false } = Astro.props;
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+---
+
+<form method="post" action="/api/submit" class="request-form" data-request-form>
+  <input type="hidden" name="form_slug" value={form.slug} />
+  <div class="alert alert-error" data-form-error hidden role="alert">
+    <Icon name="circleAlert" size={18} /><span></span>
+  </div>
+  <div class="form-grid">
+    <div class="field">
+      <label for={`${form.slug}-name`}>Your name <span class="req">*</span></label>
+      <input id={`${form.slug}-name`} name="name" autocomplete="name" required maxlength="120" />
+    </div>
+    <div class="field">
+      <label for={`${form.slug}-email`}>Email <span class="req">*</span></label>
+      <input id={`${form.slug}-email`} name="email" type="email" autocomplete="email" required maxlength="200" />
+    </div>
+    <div class="field">
+      <label for={`${form.slug}-phone`}>Phone</label>
+      <input id={`${form.slug}-phone`} name="phone" type="tel" autocomplete="tel" maxlength="40" />
+    </div>
+    {
+      !compact && (
+        <div class="field">
+          <label for={`${form.slug}-plan`}>Plan or business name</label>
+          <input id={`${form.slug}-plan`} name="plan_name" maxlength="200" />
+        </div>
+      )
+    }
+    {
+      form.fields.map((f) => {
+        const id = `${form.slug}-${f.name}`;
+        const full = f.type === 'textarea' || compact;
+        return (
+          <div class:list={['field', { full }]}>
+            <label for={id}>
+              {f.label} {f.required && <span class="req">*</span>}
+            </label>
+            {f.type === 'textarea' ? (
+              <textarea id={id} name={f.name} required={f.required} maxlength="5000" />
+            ) : f.type === 'select' ? (
+              <select id={id} name={f.name} required={f.required}>
+                <option value="">Choose one</option>
+                {f.options.map((o) => (
+                  <option>{o}</option>
+                ))}
+              </select>
+            ) : (
+              <input id={id} name={f.name} type={f.type} required={f.required} maxlength="500" />
+            )}
+            {f.hint && <span class="hint">{f.hint}</span>}
+          </div>
+        );
+      })
+    }
+    <div class="hp" aria-hidden="true">
+      <label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label>
+    </div>
+    {
+      turnstileKey && (
+        <div class="full">
+          <div class="cf-turnstile" data-sitekey={turnstileKey} />
+        </div>
+      )
+    }
+  </div>
+  <div class="form-actions">
+    <button class="button" type="submit">Send request<Icon name="send" size={16} /></button>
+    <span class="hint">No portal sign-in needed. A real person on the team will follow up.</span>
+  </div>
+</form>
+
+{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+
+<script>
+  const messages: Record<string, string> = {
+    missing: 'Please fill in the required fields.',
+    email: 'Please enter a valid email address.',
+    captcha: 'Please complete the verification and try again.',
+    server: 'Something went wrong on our side. Please try again, or call us.',
+  };
+  const code = new URLSearchParams(location.search).get('error');
+  if (code) {
+    document.querySelectorAll<HTMLElement>('[data-form-error]').forEach((el) => {
+      el.hidden = false;
+      el.querySelector('span')!.textContent = messages[code] ?? messages.server;
+    });
+  }
+</script>
+
+<style>
+  .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .form-actions .hint {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  [data-form-error] {
+    margin-bottom: 18px;
+  }
+</style>

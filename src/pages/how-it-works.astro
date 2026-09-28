@@ -1,0 +1,85 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import Icon from '../components/Icon.astro';
+import HelpBand from '../components/HelpBand.astro';
+import { site } from '../data/site';
+---
+
+<SiteLayout title="How it works" description="Familiar people and a clearer process: how we work together on plan support and advanced projects.">
+  <PageHero
+    eyebrow="Familiar people. A clearer process."
+    title="The relationship matters. So does making things easier."
+    lede={`If you’ve worked with ${site.team} over the years, welcome home. This is a simpler way to reach the team, find your forms, and keep things moving.`}
+  />
+  <section class="section">
+    <div class="container hiw">
+      <div>
+        <h2>Three steps, every time.</h2>
+        <p class="lede" style="margin-top:16px">
+          Whether it’s a missing document or a complex trust, the process is the same: start where you are, get the right
+          review, and agree on the work before it begins.
+        </p>
+      </div>
+      <div class="steps">
+        <div>
+          <span>01</span>
+          <div>
+            <h3>Tell us what you need</h3>
+            <p>A form, a question, or an idea. Start where you are. You don’t need to know the name of a service.</p>
+          </div>
+        </div>
+        <div>
+          <span>02</span>
+          <div>
+            <h3>Get the right review</h3>
+            <p>The team organizes the facts and figures out who needs to help, whether that’s us, your CPA, or an attorney.</p>
+          </div>
+        </div>
+        <div>
+          <span>03</span>
+          <div>
+            <h3>Agree on the work</h3>
+            <p>Scope, fees, and next steps are clear before work starts. No surprises.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="background:var(--cream)">
+    <div class="container grid-3">
+      <div class="card card-white">
+        <Icon name="fileText" size={24} stroke={1.6} />
+        <h3 style="margin-top:16px">Forms without sign-in</h3>
+        <p>Every public form works without a portal account. Send a request in a few minutes.</p>
+      </div>
+      <div class="card card-white">
+        <Icon name="lockKeyhole" size={24} stroke={1.6} />
+        <h3 style="margin-top:16px">A private portal</h3>
+        <p>Clients get a secure place for plan documents, messages with the team, and ongoing work.</p>
+      </div>
+      <div class="card card-white">
+        <Icon name="users" size={24} stroke={1.6} />
+        <h3 style="margin-top:16px">The right professionals</h3>
+        <p>For involved work, we bring the right attorney or professional into a defined project.</p>
+      </div>
+    </div>
+  </section>
+  <HelpBand />
+</SiteLayout>
+
+<style>
+  .hiw {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: clamp(32px, 6vw, 96px);
+  }
+  .card-white :global(.icon) {
+    color: var(--green);
+  }
+  @media (max-width: 860px) {
+    .hiw {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import Icon from './Icon.astro';
+import { faqs } from '../data/faqs';
+---
+
+<section class="section">
+  <div class="container faq-grid">
+    <div>
+      <span class="eyebrow">Need help?</span>
+      <h2>Frequently asked<br />questions</h2>
+      <p class="lede">
+        We are here to help with any questions about our services. The team is ready to provide support, guidance, and
+        information.
+      </p>
+    </div>
+    <div class="faq-list">
+      {
+        faqs.map((f) => (
+          <details>
+            <summary>
+              {f.q}
+              <Icon name="plus" size={18} />
+            </summary>
+            <p>{f.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,41 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import MessageThread from '../../components/portal/MessageThread.astro';
+import { isTeam } from '../../lib/auth';
+import { listMessages, markRead, postMessage } from '../../lib/portal';
+import { notifyTeam } from '../../lib/notify';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+if (isTeam(user)) return Astro.redirect('/portal/admin');
+
+let error = '';
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const body = String(data.get('body') ?? '');
+  error = (await postMessage(user.id, user, body)) ?? '';
+  if (!error) {
+    await notifyTeam(
+      `New portal message from ${user.name}`,
+      `${body.slice(0, 2000)}\n\nReply: ${new URL(`/portal/admin/clients/${user.id}`, Astro.url)}`,
+    );
+    return Astro.redirect('/portal/messages', 303);
+  }
+}
+
+await markRead(user.id, user);
+const messages = await listMessages(user.id);
+---
+
+<PortalLayout title="Messages">
+  <div class="page-head">
+    <div>
+      <h1>Messages</h1>
+      <p>A private conversation with the Tax Academy team.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <MessageThread messages={messages} viewer={user} error={error} emptyText="No messages yet. Ask a question, share an update, or let us know what you need." />
+  </div>
+</PortalLayout>

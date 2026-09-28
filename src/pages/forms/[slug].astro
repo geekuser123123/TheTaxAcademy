@@ -1,0 +1,83 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import RequestFormFields from '../../components/RequestFormFields.astro';
+import { forms, type RequestForm } from '../../data/forms';
+import { site } from '../../data/site';
+
+export function getStaticPaths() {
+  return forms.map((form) => ({ params: { slug: form.slug }, props: { form } }));
+}
+
+const { form } = Astro.props as { form: RequestForm };
+---
+
+<SiteLayout title={form.title} description={form.summary}>
+  <PageHero
+    eyebrow={`${form.group} · about ${form.minutes} minutes`}
+    title={form.title}
+    lede={form.intro}
+    crumbs={[{ href: '/forms', label: 'Forms & requests' }]}
+  />
+  <section class="section" id="request">
+    <div class="container form-layout">
+      <div class="form-card">
+        <RequestFormFields form={form} />
+      </div>
+      <aside class="form-aside">
+        <div class="card">
+          <h3>What happens next</h3>
+          <ol>
+            <li>The team reviews your request, usually within one business day.</li>
+            <li>We confirm what’s needed and whether anything is outside your service agreement.</li>
+            <li>Scope and any fees are agreed before new work starts.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Rather talk it through?</h3>
+          <p>Call the team and we’ll help you figure out the right form.</p>
+          <a href={site.phoneHref} class="text-link" style="margin-top:12px"><Icon name="phone" size={16} />{site.phone}</a>
+        </div>
+        <div class="card">
+          <h3>Already a portal client?</h3>
+          <p>Use the same email you sign in with and the request will show up in your portal.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</SiteLayout>
+
+<style>
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .form-card {
+    padding: clamp(24px, 4vw, 40px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+  .form-aside {
+    display: grid;
+    gap: 16px;
+  }
+  .form-aside ol {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .form-aside li + li {
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) {
+    .form-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,84 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { hashPassword, passwordProblem, verifyPassword } from '../../lib/auth';
+import { db, type UserRow } from '../../lib/db';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+let error = '';
+let ok = false;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const current = String(data.get('current') ?? '');
+  const password = String(data.get('password') ?? '');
+  const row = await db().prepare('SELECT password_hash FROM users WHERE id = ?').bind(user.id).first<Pick<UserRow, 'password_hash'>>();
+  const problem = passwordProblem(password);
+  if (!(await verifyPassword(current, row?.password_hash ?? null))) error = 'Your current password is incorrect.';
+  else if (problem) error = problem;
+  else if (password !== String(data.get('confirm') ?? '')) error = 'New passwords don’t match.';
+  else {
+    await db().prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(await hashPassword(password), user.id).run();
+    ok = true;
+  }
+}
+---
+
+<PortalLayout title="Account">
+  <div class="page-head">
+    <div>
+      <h1>Account</h1>
+      <p>Your sign-in details.</p>
+    </div>
+  </div>
+  <div class="panel-grid">
+    <div class="panel">
+      <div class="panel-head"><h2>Change password</h2></div>
+      {
+        ok && (
+          <div class="alert" style="margin-bottom:18px">
+            <Icon name="check" size={18} />
+            Password updated.
+          </div>
+        )
+      }
+      {
+        error && (
+          <div class="alert alert-error" role="alert" style="margin-bottom:18px">
+            <Icon name="circleAlert" size={18} />
+            {error}
+          </div>
+        )
+      }
+      <form method="post" class="stack">
+        <input type="email" name="username" value={user.email} autocomplete="username" hidden readonly />
+        <div class="field">
+          <label for="current">Current password</label>
+          <input id="current" name="current" type="password" autocomplete="current-password" required />
+        </div>
+        <div class="field">
+          <label for="password">New password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" minlength="10" required />
+        </div>
+        <div class="field">
+          <label for="confirm">Confirm new password</label>
+          <input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="10" required />
+        </div>
+        <div><button class="button" type="submit">Update password</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Profile</h2></div>
+      <dl class="kv">
+        <dt>Name</dt><dd>{user.name}</dd>
+        <dt>Email</dt><dd>{user.email}</dd>
+        {user.company && (<><dt>Company</dt><dd>{user.company}</dd></>)}
+      </dl>
+      <p class="small muted" style="margin-top:16px">
+        Need to change your name or email? <a href="/portal/messages">Send the team a message</a>.
+      </p>
+    </div>
+  </div>
+</PortalLayout>

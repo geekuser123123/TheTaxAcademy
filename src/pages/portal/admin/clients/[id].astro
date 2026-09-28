@@ -1,0 +1,187 @@
+---
+import PortalLayout from '../../../../layouts/PortalLayout.astro';
+import Icon from '../../../../components/Icon.astro';
+import CopyLink from '../../../../components/portal/CopyLink.astro';
+import DocumentTable from '../../../../components/portal/DocumentTable.astro';
+import UploadForm from '../../../../components/portal/UploadForm.astro';
+import MessageThread from '../../../../components/portal/MessageThread.astro';
+import { createAuthLink } from '../../../../lib/auth';
+import { db, type UserRow } from '../../../../lib/db';
+import {
+  deleteDocument,
+  listClientSubmissions,
+  listDocuments,
+  listMessages,
+  markRead,
+  postMessage,
+  uploadDocument,
+} from '../../../../lib/portal';
+import { formatDate, isEmail, str } from '../../../../lib/format';
+import { getForm } from '../../../../data/forms';
+
+export const prerender = false;
+
+const me = Astro.locals.user!;
+const clientId = Astro.params.id!;
+const loadClient = () =>
+  db().prepare("SELECT * FROM users WHERE id = ? AND role = 'client'").bind(clientId).first<UserRow>();
+
+let client = await loadClient();
+if (!client) return Astro.redirect('/portal/admin');
+
+let uploadError = '';
+let messageError = '';
+let profileError = '';
+let link: { url: string; purpose: 'invite' | 'reset' } | null = null;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const action = str(data.get('action'), 40);
+  const here = `/portal/admin/clients/${clientId}`;
+
+  if (action === 'upload') {
+    uploadError = (await uploadDocument(data, clientId, me)) ?? '';
+    if (!uploadError) return Astro.redirect(`${here}#documents`, 303);
+  } else if (action === 'delete-document') {
+    const docId = str(data.get('document_id'), 60);
+    const owned = await db().prepare('SELECT 1 FROM documents WHERE id = ? AND client_id = ?').bind(docId, clientId).first();
+    if (owned) await deleteDocument(docId);
+    return Astro.redirect(`${here}#documents`, 303);
+  } else if (action === 'message') {
+    messageError = (await postMessage(clientId, me, String(data.get('body') ?? ''))) ?? '';
+    if (!messageError) return Astro.redirect(`${here}#messages`, 303);
+  } else if (action === 'link') {
+    const purpose = client.password_hash ? 'reset' : 'invite';
+    link = { url: await createAuthLink(Astro.url.origin, clientId, purpose), purpose };
+  } else if (action === 'toggle-active') {
+    await db().prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?').bind(clientId).run();
+    await db().prepare('DELETE FROM sessions WHERE user_id = ?').bind(clientId).run();
+    return Astro.redirect(here, 303);
+  } else if (action === 'profile') {
+    const name = str(data.get('name'), 120);
+    const email = str(data.get('email'), 200).toLowerCase();
+    if (!name || !isEmail(email)) profileError = 'Enter a name and a valid email.';
+    else if (await db().prepare('SELECT 1 FROM users WHERE email = ? AND id != ?').bind(email, clientId).first()) {
+      profileError = 'Another account already uses that email.';
+    } else {
+      await db()
+        .prepare('UPDATE users SET name = ?, email = ?, company = ?, phone = ? WHERE id = ?')
+        .bind(name, email, str(data.get('company'), 200) || null, str(data.get('phone'), 40) || null, clientId)
+        .run();
+      return Astro.redirect(here, 303);
+    }
+  }
+  client = (await loadClient())!;
+}
+
+await markRead(clientId, me);
+const [documents, messages, requests] = await Promise.all([
+  listDocuments(clientId),
+  listMessages(clientId),
+  listClientSubmissions(clientId, client.email),
+]);
+---
+
+<PortalLayout title={client.name}>
+  <nav class="small" style="margin-bottom:12px"><a href="/portal/admin" class="muted">← All clients</a></nav>
+  <div class="page-head">
+    <div>
+      <h1>{client.name}</h1>
+      <p>
+        {client.company && `${client.company} · `}{client.email}{client.phone && ` · ${client.phone}`}
+        {!client.is_active && <span class="badge badge-done" style="margin-left:8px">inactive</span>}
+      </p>
+    </div>
+    <div class="row-actions">
+      <form method="post" class="inline-form">
+        <input type="hidden" name="action" value="link" />
+        <button class="button button-sm">
+          <Icon name="keyRound" size={15} />{client.password_hash ? 'Create reset link' : 'Create invite link'}
+        </button>
+      </form>
+      <form method="post" class="inline-form">
+        <input type="hidden" name="action" value="toggle-active" />
+        <button class="button button-sm button-secondary">{client.is_active ? 'Deactivate' : 'Reactivate'}</button>
+      </form>
+    </div>
+  </div>
+
+  {
+    link && (
+      <div class="panel" style="margin-bottom:20px; border-color: var(--lime)">
+        <div class="panel-head"><h2>{link.purpose === 'invite' ? 'Invite link' : 'Password reset link'}</h2></div>
+        <p class="small muted">
+          Send this private link to {client.name}. It works once and expires in {link.purpose === 'invite' ? '7 days' : '24 hours'}.
+        </p>
+        <CopyLink value={link.url} />
+      </div>
+    )
+  }
+
+  <div class="panel-grid">
+    <div>
+      <div class="panel" id="messages">
+        <div class="panel-head"><h2>Messages</h2></div>
+        <MessageThread messages={messages} viewer={me} error={messageError} emptyText={`No messages yet. Anything you send appears in ${client.name.split(' ')[0]}’s portal.`} />
+      </div>
+      <div class="panel" id="documents">
+        <div class="panel-head"><h2>Documents</h2></div>
+        <DocumentTable documents={documents} viewer={me} canDelete />
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-head"><h2>Share a document</h2></div>
+        <UploadForm error={uploadError} withCategory />
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Form requests</h2></div>
+        {
+          requests.length === 0 ? (
+            <p class="small muted">No form requests from this client.</p>
+          ) : (
+            <div class="table-wrap">
+              <table class="table">
+                <tbody>
+                  {requests.map((r) => (
+                    <tr>
+                      <td>
+                        <a href={`/portal/admin/submissions#s-${r.id}`}>{getForm(r.form_slug)?.title ?? r.form_slug}</a>
+                        <div class="small muted">{formatDate(r.created_at)}</div>
+                      </td>
+                      <td><span class={`badge badge-${r.status}`}>{r.status.replace('_', ' ')}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+      <div class="panel">
+        <details>
+          <summary style="cursor:pointer; font-weight:600">Edit client details</summary>
+          {
+            profileError && (
+              <div class="alert alert-error" role="alert" style="margin-top:16px">
+                <Icon name="circleAlert" size={18} />
+                {profileError}
+              </div>
+            )
+          }
+          <form method="post" class="stack" style="margin-top:16px">
+            <input type="hidden" name="action" value="profile" />
+            <div class="field"><label for="n">Name</label><input id="n" name="name" required value={client.name} maxlength="120" /></div>
+            <div class="field"><label for="e">Email</label><input id="e" name="email" type="email" required value={client.email} maxlength="200" /></div>
+            <div class="field"><label for="c">Company / plan</label><input id="c" name="company" value={client.company ?? ''} maxlength="200" /></div>
+            <div class="field"><label for="p">Phone</label><input id="p" name="phone" value={client.phone ?? ''} maxlength="40" /></div>
+            <div><button class="button button-sm" type="submit">Save</button></div>
+          </form>
+        </details>
+        <p class="small muted" style="margin-top:16px">
+          Client since {formatDate(client.created_at)} · Last sign-in {client.last_login_at ? formatDate(client.last_login_at) : client.password_hash ? '—' : 'invite pending'}
+        </p>
+      </div>
+    </div>
+  </div>
+</PortalLayout>

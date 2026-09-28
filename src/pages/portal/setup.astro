@@ -1,0 +1,75 @@
+---
+// First-run setup: creates the first admin account. Disabled once any admin exists.
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { createSession, hashPassword, passwordProblem } from '../../lib/auth';
+import { db, newId } from '../../lib/db';
+import { isEmail, str } from '../../lib/format';
+
+export const prerender = false;
+
+const anyAdmin = await db().prepare("SELECT 1 FROM users WHERE role = 'admin' LIMIT 1").first();
+if (anyAdmin) return Astro.redirect('/portal/login');
+
+let error = '';
+const values = { name: '', email: '' };
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  values.name = str(data.get('name'), 120);
+  values.email = str(data.get('email'), 200).toLowerCase();
+  const password = String(data.get('password') ?? '');
+  const problem = passwordProblem(password);
+  if (!values.name || !isEmail(values.email)) error = 'Enter your name and a valid email.';
+  else if (problem) error = problem;
+  else if (password !== String(data.get('confirm') ?? '')) error = 'Passwords don’t match.';
+  else {
+    const id = newId();
+    // The WHERE NOT EXISTS guard makes this safe if two people submit at once.
+    const result = await db()
+      .prepare(
+        `INSERT INTO users (id, email, name, role, password_hash)
+         SELECT ?, ?, ?, 'admin', ? WHERE NOT EXISTS (SELECT 1 FROM users WHERE role = 'admin')`,
+      )
+      .bind(id, values.email, values.name, await hashPassword(password))
+      .run();
+    if (!result.meta.changes) return Astro.redirect('/portal/login');
+    await createSession(Astro.cookies, id);
+    return Astro.redirect('/portal/admin', 303);
+  }
+}
+---
+
+<PortalLayout title="Set up the portal" bare>
+  <div class="auth-card">
+    <h2>Set up the portal</h2>
+    <p>Create the first team administrator. This page disappears once an admin exists.</p>
+    {
+      error && (
+        <div class="alert alert-error" role="alert" style="margin-bottom:18px">
+          <Icon name="circleAlert" size={18} />
+          {error}
+        </div>
+      )
+    }
+    <form method="post">
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" name="name" autocomplete="name" required value={values.name} />
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required value={values.email} />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="10" required />
+        <span class="hint">At least 10 characters.</span>
+      </div>
+      <div class="field">
+        <label for="confirm">Confirm password</label>
+        <input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="10" required />
+      </div>
+      <button class="button" type="submit">Create admin account</button>
+    </form>
+  </div>
+</PortalLayout>

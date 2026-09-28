@@ -1,0 +1,25 @@
+---
+import Icon from '../Icon.astro';
+
+interface Props {
+  value: string;
+}
+
+const { value } = Astro.props;
+---
+
+<div class="copy-box">
+  <input class="input" value={value} readonly aria-label="Private link" onfocus="this.select()" />
+  <button type="button" class="button button-sm" data-copy={value}><Icon name="copy" size={15} />Copy</button>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(btn.dataset.copy!);
+      const label = btn.lastChild!;
+      label.textContent = 'Copied';
+      setTimeout(() => (label.textContent = 'Copy'), 2000);
+    });
+  });
+</script>

@@ -1,0 +1,51 @@
+---
+import Icon from './Icon.astro';
+import { site, mainNav } from '../data/site';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+---
+
+<div class="topbar">
+  <div class="container">
+    <span>{site.tagline}</span>
+    <a href={site.phoneHref}><Icon name="phone" size={13} />{site.phone}</a>
+  </div>
+</div>
+<header class="header">
+  <div class="container">
+    <a href="/" class="brand" aria-label={`${site.name} home`}>
+      <img src="/images/tax-academy-logo.png" alt={site.legalName} width="678" height="624" />
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      {
+        mainNav.map((item) => (
+          <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+    <a href="/portal" class="portal-button">
+      <Icon name="lockKeyhole" size={15} />Client portal<Icon name="arrowUpRight" size={15} />
+    </a>
+    <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav">
+      <Icon name="menu" size={24} />
+    </button>
+  </div>
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" data-open="false">
+    {mainNav.map((item) => <a href={item.href}>{item.label}</a>)}
+    <a href="/portal" class="portal-button"><Icon name="lockKeyhole" size={15} />Client portal</a>
+  </nav>
+</header>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
+  const nav = document.getElementById('mobile-nav');
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    nav?.setAttribute('data-open', String(open));
+  });
+</script>

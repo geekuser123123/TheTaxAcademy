@@ -1,0 +1,114 @@
+---
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import { db, type SubmissionRow } from '../../../lib/db';
+import { formatDateTime, str } from '../../../lib/format';
+import { getForm } from '../../../data/forms';
+
+export const prerender = false;
+
+const STATUSES = ['new', 'in_progress', 'done'] as const;
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  const id = str(data.get('id'), 60);
+  const status = str(data.get('status'), 20);
+  if ((STATUSES as readonly string[]).includes(status)) {
+    await db().prepare('UPDATE submissions SET status = ? WHERE id = ?').bind(status, id).run();
+  }
+  return Astro.redirect(`${Astro.url.pathname}${Astro.url.search}#s-${id}`, 303);
+}
+
+const filter = Astro.url.searchParams.get('status') ?? 'open';
+const where =
+  filter === 'all' ? '' : filter === 'open' ? "WHERE s.status != 'done'" : `WHERE s.status = '${STATUSES.find((s) => s === filter) ?? 'new'}'`;
+const { results } = await db()
+  .prepare(
+    `SELECT s.*, u.name AS client_name FROM submissions s
+       LEFT JOIN users u ON u.id = s.client_id
+       ${where} ORDER BY s.created_at DESC LIMIT 200`,
+  )
+  .all<SubmissionRow & { client_name: string | null }>();
+
+const tabs = [
+  { key: 'open', label: 'Open' },
+  { key: 'new', label: 'New' },
+  { key: 'in_progress', label: 'In progress' },
+  { key: 'done', label: 'Done' },
+  { key: 'all', label: 'All' },
+];
+---
+
+<PortalLayout title="Form requests">
+  <div class="page-head">
+    <div>
+      <h1>Form requests</h1>
+      <p>Everything submitted through the public forms.</p>
+    </div>
+    <nav class="row-actions" aria-label="Filter">
+      {
+        tabs.map((t) => (
+          <a
+            href={`?status=${t.key}`}
+            class:list={['button', 'button-sm', { 'button-secondary': filter !== t.key }]}
+            aria-current={filter === t.key ? 'page' : undefined}
+          >
+            {t.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+
+  {
+    results.length === 0 ? (
+      <div class="panel">
+        <div class="empty">
+          <span class="icon-box"><Icon name="inbox" size={22} /></span>
+          <p>Nothing here right now.</p>
+        </div>
+      </div>
+    ) : (
+      results.map((s) => {
+        const payload = JSON.parse(s.payload) as Record<string, string>;
+        return (
+          <div class="panel" id={`s-${s.id}`}>
+            <div class="panel-head" style="align-items:flex-start">
+              <div>
+                <h2>{getForm(s.form_slug)?.title ?? s.form_slug}</h2>
+                <p class="small muted">
+                  {formatDateTime(s.created_at)} ·{' '}
+                  {s.client_id ? <a href={`/portal/admin/clients/${s.client_id}`}>{s.client_name}</a> : 'Not a portal client'}
+                </p>
+              </div>
+              <form method="post" class="row-actions">
+                <input type="hidden" name="id" value={s.id} />
+                <span class={`badge badge-${s.status}`}>{s.status.replace('_', ' ')}</span>
+                {s.status !== 'in_progress' && s.status !== 'done' && (
+                  <button name="status" value="in_progress" class="button button-sm button-secondary">Start</button>
+                )}
+                {s.status !== 'done' ? (
+                  <button name="status" value="done" class="button button-sm">
+                    <Icon name="check" size={15} />
+                    Done
+                  </button>
+                ) : (
+                  <button name="status" value="new" class="button button-sm button-secondary">Reopen</button>
+                )}
+              </form>
+            </div>
+            <dl class="kv">
+              <dt>Name</dt>
+              <dd>{s.name}</dd>
+              <dt>Email</dt>
+              <dd><a href={`mailto:${s.email}`}>{s.email}</a></dd>
+              {s.phone && (<><dt>Phone</dt><dd><a href={`tel:${s.phone}`}>{s.phone}</a></dd></>)}
+              {s.plan_name && (<><dt>Plan / business</dt><dd>{s.plan_name}</dd></>)}
+              {Object.entries(payload).map(([k, v]) => (<><dt>{k}</dt><dd>{v}</dd></>))}
+            </dl>
+          </div>
+        );
+      })
+    )
+  }
+</PortalLayout>

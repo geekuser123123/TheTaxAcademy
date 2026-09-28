@@ -1,0 +1,92 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import HelpBand from '../../components/HelpBand.astro';
+import { serviceCategories } from '../../data/services';
+---
+
+<SiteLayout title="Explore services" description="Advanced planning for self-directed plan owners: Roth, trusts, real estate, asset protection, and compliance review.">
+  <PageHero
+    eyebrow="When you’re ready for more"
+    title="You have a plan. What would you like to do with it?"
+    lede="From a first rental property to a complex trust or business structure, start with the result you want. More involved work is scoped as a defined project with the right professional."
+  />
+  <section class="section">
+    <div class="container services-list">
+      {
+        serviceCategories.map((c) => (
+          <a href={`/services/${c.slug}`} class="service-row">
+            <span class="icon-box"><Icon name={c.icon} size={24} stroke={1.6} /></span>
+            <span>
+              <h2>{c.title}</h2>
+              <p>{c.intro}</p>
+            </span>
+            <Icon name="arrowUpRight" size={22} />
+          </a>
+        ))
+      }
+      <a href="/forms/advanced-planning" class="service-row service-row-lime">
+        <span class="icon-box"><Icon name="messageCircle" size={24} stroke={1.6} /></span>
+        <span>
+          <h2>Something a little different?</h2>
+          <p>You don’t need the name of a service. Bring us the idea and we’ll help find the right path.</p>
+        </span>
+        <Icon name="arrowUpRight" size={22} />
+      </a>
+    </div>
+  </section>
+  <HelpBand />
+</SiteLayout>
+
+<style>
+  .services-list {
+    display: grid;
+    gap: 14px;
+  }
+  .service-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+    padding: 28px;
+    border-radius: var(--radius);
+    background: var(--cream);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .service-row:hover {
+    background: var(--cream-2);
+  }
+  .service-row h2 {
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+  }
+  .service-row p {
+    color: var(--muted);
+    max-width: 70ch;
+  }
+  .service-row .icon-box {
+    width: 56px;
+    height: 56px;
+    background: #fff;
+  }
+  .service-row-lime {
+    background: var(--lime);
+  }
+  .service-row-lime:hover {
+    background: var(--lime-hover);
+  }
+  .service-row-lime p {
+    color: var(--ink);
+  }
+  @media (max-width: 620px) {
+    .service-row {
+      grid-template-columns: 1fr auto;
+      padding: 22px;
+    }
+    .service-row .icon-box {
+      display: none;
+    }
+  }
+</style>
