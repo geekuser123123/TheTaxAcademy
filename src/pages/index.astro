@@ -533,7 +533,10 @@ const contactForm = getForm('contact-team')!;
 
   /* Renewals */
   .renewals-home {
-    padding-top: 0;
+    background:
+      radial-gradient(600px 300px at 100% 0%, rgba(116, 191, 68, 0.14), transparent 70%),
+      var(--cream);
+    border-block: 1px solid var(--line);
   }
 
   .renew-card {
@@ -542,8 +545,9 @@ const contactForm = getForm('contact-team')!;
     align-items: flex-start;
     min-height: 300px;
     padding: 32px;
-    border-radius: 4px;
-    background: var(--cream);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow);
   }
 
   .renew-card h3 {
