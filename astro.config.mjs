@@ -13,6 +13,8 @@ export default defineConfig({
   }),
   // The portal uses its own D1-backed sessions (src/lib/auth.ts), so Astro's KV sessions are off.
   session: false,
+  // The dev toolbar adds ~20 extra scripts to every page in `npm run dev`.
+  devToolbar: { enabled: false },
   security: {
     checkOrigin: true,
   },

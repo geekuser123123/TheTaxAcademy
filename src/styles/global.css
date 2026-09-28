@@ -611,7 +611,7 @@ p {
   top: 40px;
   width: 520px;
   height: 520px;
-  background: url('/images/seal.png') center / contain no-repeat;
+  background: url('/images/seal.webp') center / contain no-repeat;
   opacity: 0.06;
   pointer-events: none;
 }
