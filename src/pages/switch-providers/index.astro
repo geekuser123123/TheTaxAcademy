@@ -1,0 +1,247 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import Faq from '../../components/Faq.astro';
+import PublicFormFields from '../../components/PublicFormFields.astro';
+import { getPublicForm } from '../../data/forms';
+import { switchFaqs } from '../../data/faqs';
+
+const form = getPublicForm('switch-review')!;
+
+const steps = [
+  {
+    title: 'Tell Us About Your Plan',
+    text: 'Submit a short request describing what you currently have and the help you need.',
+  },
+  {
+    title: 'Provide the Requested Documents',
+    text: 'Our team will explain which documents are needed and how to provide them.',
+  },
+  {
+    title: 'Review the Work and Fees',
+    text: 'We explain whether we can support your plan, what needs to be completed, and the applicable costs.',
+  },
+  {
+    title: 'Begin Your Ongoing Service',
+    text: 'After the agreed transition is completed, your maintenance service and member learning access begin.',
+  },
+];
+---
+
+<SiteLayout
+  title="Switch Your 401(k) Document Provider | The Tax Academy"
+  description="Bring your existing plan’s document maintenance and support to The Tax Academy. Start with a provider review."
+>
+  <!-- A. Introduction -->
+  <PageHero
+    eyebrow="Switch providers"
+    title="Bring Your Existing Plan to The Tax Academy."
+    lede="Get ongoing document maintenance, administrative support, and member education backed by our attorney and our team’s nearly 30 years of retirement-plan experience."
+  >
+    <p class="lede" style="margin-top:14px">
+      Start with a review of your existing plan so we can explain the transition and what is needed.
+    </p>
+    <a href="#request-review" class="button" style="margin-top:32px">
+      Request a Provider Review<Icon name="arrowDown" size={17} />
+    </a>
+  </PageHero>
+
+  <!-- B. Reason to switch -->
+  <section class="section">
+    <div class="container why">
+      <div>
+        <span class="eyebrow">Why switch</span>
+        <h2>Your Provider Relationship Should Not End With a Set of Documents.</h2>
+      </div>
+      <div>
+        <p class="lede">
+          Your plan needs ongoing attention as requirements change. You also need a practical way to understand common
+          questions and know where to turn when something changes.
+        </p>
+        <p class="lede" style="margin-top:14px">
+          The Tax Academy brings document maintenance, administrative support, and attorney-reviewed member education
+          together.
+        </p>
+        <ul class="benefits">
+          <li><Icon name="refreshCw" size={18} />Ongoing document support.</li>
+          <li><Icon name="library" size={18} />Practical learning in one place.</li>
+          <li><Icon name="users" size={18} />An experienced team for the next step.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- C. Transition process -->
+  <section class="section process">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Transition process</span>
+          <h2>A Clear Process Before You Make the Switch.</h2>
+        </div>
+      </div>
+      <ol class="process-steps">
+        {
+          steps.map((s, i) => (
+            <li>
+              <span class="step-num">{i + 1}</span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- D. Review request form -->
+  <section class="section" id="request-review">
+    <div class="container form-layout">
+      <div>
+        <span class="eyebrow">Provider review</span>
+        <h2>Tell Us About Your Existing Plan.</h2>
+        <p class="lede" style="margin-top:16px">
+          Start with the basics. Our team will contact you about the next steps and any documents needed for review.
+        </p>
+      </div>
+      <div class="form-card">
+        <PublicFormFields form={form} submitLabel="Request My Provider Review">
+          <p class="form-note" slot="note">
+            <Icon name="info" size={16} />
+            This request begins a review. Your existing plan and provider arrangements remain unchanged until a transition
+            is agreed upon and completed.
+          </p>
+        </PublicFormFields>
+      </div>
+    </div>
+  </section>
+
+  <!-- E. Switching questions -->
+  <Faq items={switchFaqs} title="Switching Questions" />
+</SiteLayout>
+
+<style>
+  .why {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(24px, 6vw, 88px);
+  }
+
+  .benefits {
+    display: grid;
+    gap: 12px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .benefits li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    font-weight: 600;
+  }
+
+  .benefits :global(.icon) {
+    color: var(--green);
+    flex: none;
+  }
+
+  .process {
+    background: var(--cream);
+  }
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .process-steps li {
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    background: #fff;
+    border: 1px solid var(--line);
+  }
+
+  .step-num {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 18px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--lime);
+    font-weight: 700;
+  }
+
+  .process-steps h3 {
+    margin-bottom: 8px;
+  }
+
+  .process-steps p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  #request-review {
+    scroll-margin-top: 16px;
+  }
+
+  .form-layout {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: clamp(24px, 5vw, 72px);
+    align-items: start;
+  }
+
+  .form-card {
+    padding: clamp(24px, 4vw, 40px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+
+  .form-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .form-note :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--green);
+  }
+
+  @media (max-width: 1020px) {
+    .process-steps {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 860px) {
+    .why,
+    .form-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .process-steps {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

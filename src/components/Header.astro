@@ -2,8 +2,8 @@
 import Icon from './Icon.astro';
 import { site, mainNav } from '../data/site';
 
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+const path = Astro.url.pathname;
+const isActive = (href: string) => !href.includes('#') && path.startsWith(href);
 ---
 
 <div class="topbar">
@@ -26,26 +26,34 @@ const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
         ))
       }
     </nav>
-    <a href="/portal" class="portal-button">
-      <Icon name="lockKeyhole" size={15} />Client portal<Icon name="arrowUpRight" size={15} />
-    </a>
+    <div class="header-actions">
+      <a href="/renewal-page/" class="button button-sm" aria-current={isActive('/renewal-page/') ? 'page' : undefined}>Renew My Plan</a>
+      <a href={site.memberLoginUrl} class="button button-sm button-secondary">
+        <Icon name="lockKeyhole" size={14} />Member Login
+      </a>
+    </div>
     <button class="menu-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="mobile-nav">
       <Icon name="menu" size={24} />
     </button>
   </div>
   <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation" data-open="false">
     {mainNav.map((item) => <a href={item.href}>{item.label}</a>)}
-    <a href="/portal" class="portal-button"><Icon name="lockKeyhole" size={15} />Client portal</a>
+    <div class="mobile-actions">
+      <a href="/renewal-page/" class="button">Renew My Plan</a>
+      <a href={site.memberLoginUrl} class="button button-secondary"><Icon name="lockKeyhole" size={15} />Member Login</a>
+    </div>
   </nav>
 </header>
 
 <script>
   const toggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
   const nav = document.getElementById('mobile-nav');
-  toggle?.addEventListener('click', () => {
-    const open = toggle.getAttribute('aria-expanded') !== 'true';
-    toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+  const setOpen = (open: boolean) => {
+    toggle?.setAttribute('aria-expanded', String(open));
+    toggle?.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
     nav?.setAttribute('data-open', String(open));
-  });
+  };
+  toggle?.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  // "How It Works" is an anchor on the home page: close the menu after following it.
+  nav?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
 </script>

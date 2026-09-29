@@ -1,0 +1,31 @@
+---
+// Shows the error returned by /api/submit as ?error=<code>.
+import Icon from './Icon.astro';
+---
+
+<div class="alert alert-error form-error" data-form-error hidden role="alert">
+  <Icon name="circleAlert" size={18} /><span></span>
+</div>
+
+<script>
+  const messages: Record<string, string> = {
+    missing: 'Please complete the required fields.',
+    email: 'Please enter a valid email address.',
+    term: 'Please choose a maintenance term.',
+    captcha: 'Please complete the verification and try again.',
+    server: 'Something went wrong on our side. Please try again, or call us.',
+  };
+  const code = new URLSearchParams(location.search).get('error');
+  if (code) {
+    document.querySelectorAll<HTMLElement>('[data-form-error]').forEach((el) => {
+      el.hidden = false;
+      el.querySelector('span')!.textContent = messages[code] ?? messages.server;
+    });
+  }
+</script>
+
+<style>
+  .form-error {
+    margin-bottom: 18px;
+  }
+</style>

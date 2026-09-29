@@ -1,0 +1,34 @@
+---
+// The site's two primary actions, used together throughout.
+import Icon from './Icon.astro';
+
+interface Props {
+  /** 'dark' for dark backgrounds, 'light' for white/cream, 'lime' for the lime band. */
+  on?: 'dark' | 'light' | 'lime';
+}
+
+const { on = 'dark' } = Astro.props;
+---
+
+<div class="cta-buttons">
+  <a href="/renewal-page/" class:list={['button', { 'button-dark': on === 'lime' }]}>
+    Renew My Plan<Icon name="arrowRight" size={17} />
+  </a>
+  <a href="/switch-providers/" class:list={['button', 'button-secondary', { 'on-light': on !== 'dark' }]}>
+    Switch to The Tax Academy
+  </a>
+</div>
+
+<style>
+  .cta-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .on-light {
+    color: var(--ink);
+  }
+  .on-light:hover {
+    background: rgba(0, 29, 33, 0.06);
+  }
+</style>

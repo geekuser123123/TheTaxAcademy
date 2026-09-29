@@ -1,6 +1,6 @@
 ---
 import Icon from './Icon.astro';
-import { site, footerNav, disclaimer } from '../data/site';
+import { site, footerNav, footerDescription, disclaimer } from '../data/site';
 
 const year = new Date().getFullYear();
 ---
@@ -9,33 +9,19 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <p>Your home base for existing-plan support, helpful resources, and your next step.</p>
+        <p>{footerDescription}</p>
         <div class="footer-contact">
           <a href={site.phoneHref}><Icon name="phone" size={16} />{site.phone}</a>
           {site.email && <a href={`mailto:${site.email}`}><Icon name="mail" size={16} />{site.email}</a>}
           <span><Icon name="mapPin" size={16} />{site.address.line1}<br />{site.address.line2}</span>
         </div>
       </div>
-      {
-        footerNav.map((col) => (
-          <div class="footer-col">
-            <h3>{col.title}</h3>
-            {col.links.map((l) => <a href={l.href}>{l.label}</a>)}
-          </div>
-        ))
-      }
-      <div class="footer-col">
-        <h3>Your client space</h3>
-        <a href="/portal">Client portal<Icon name="arrowUpRight" size={13} /></a>
-        <a href="/portal/documents">Private documents</a>
-        <a href="/forms/contact-team">Portal access help</a>
-        {
-          site.rothAcademyUrl && (
-            <a href={site.rothAcademyUrl}>
-              Establish a new plan<Icon name="arrowUpRight" size={13} />
-            </a>
-          )
-        }
+      <nav class="footer-links" aria-label="Footer navigation">
+        {footerNav.map((l) => <a href={l.href}>{l.label}</a>)}
+      </nav>
+      <div class="footer-secondary">
+        <h3>Other services</h3>
+        <a href="/contact/?topic=statutory-agent">Statutory Agent Services</a>
       </div>
     </div>
 
@@ -47,11 +33,6 @@ const year = new Date().getFullYear();
 
     <div class="footer-bottom">
       <span>© {year} {site.legalName}</span>
-      <div>
-        <a href="/privacy">Privacy</a>
-        <a href="/service-information">Service information</a>
-        <a href="/portal/login">Team access</a>
-      </div>
     </div>
     <p class="footer-fine">{disclaimer}</p>
   </div>

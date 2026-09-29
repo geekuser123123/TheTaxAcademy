@@ -1,0 +1,710 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import Faq from '../../components/Faq.astro';
+import FormError from '../../components/FormError.astro';
+import type { IconName } from '../../components/icons';
+import { getPublicForm } from '../../data/forms';
+import { renewalFaqs } from '../../data/faqs';
+import { money, renewalServices, renewalTerms, terminationFee } from '../../data/renewal';
+
+const form = getPublicForm('renewal')!;
+const defaultTerm = renewalTerms[0];
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+
+const benefits: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: 'fileCheck',
+    title: 'Plan Document Maintenance',
+    text: 'Continued maintenance of your plan documentation within the annual service scope.',
+  },
+  {
+    icon: 'refreshCw',
+    title: 'Required Document Updates',
+    text: 'Applicable updates covered by your service, with instructions for information or signatures needed from you.',
+  },
+  {
+    icon: 'clipboardCheck',
+    title: 'Administrative Support',
+    text: 'Assistance with routine documentation questions and identifying appropriate next steps.',
+  },
+  {
+    icon: 'library',
+    title: 'Member Learning Access',
+    text: 'Continued access to practical, attorney-reviewed educational resources.',
+  },
+];
+---
+
+<SiteLayout
+  title="Renew Your Plan Maintenance | The Tax Academy"
+  description="Annual renewal keeps your Tax Academy document maintenance, required-update service, administrative support, and member learning access active."
+>
+  <!-- A. Introduction -->
+  <PageHero
+    eyebrow="Renew my plan"
+    title="Renew Your Plan Maintenance. Keep Required Updates on Track."
+    lede="Annual renewal is required to continue your Tax Academy document maintenance, required-update service, administrative support, and member learning access."
+  >
+    <p class="lede" style="margin-top:14px">Keep the support behind your plan active as retirement-plan requirements evolve.</p>
+    <a href="#renewal-options" class="button" style="margin-top:32px">
+      Choose My Renewal Term<Icon name="arrowDown" size={17} />
+    </a>
+    <p class="hero-small">Backed by our attorney and our team’s nearly 30 years of retirement-plan experience.</p>
+  </PageHero>
+
+  <!-- B. Why maintenance matters -->
+  <section class="section">
+    <div class="container">
+      <div class="info-panel">
+        <span class="icon-box"><Icon name="info" size={24} stroke={1.6} /></span>
+        <div>
+          <h2>Your Plan’s Requirements Continue After Setup.</h2>
+          <div class="info-copy">
+            <p>
+              A retirement plan is not finished when the original documents are signed. Applicable amendments and
+              restatements must be completed as requirements change.
+            </p>
+            <p>
+              Missing required document updates can jeopardize the plan’s tax-qualified status and require corrective work.
+              Losing tax-favored treatment can also affect contribution deductions and rollover eligibility.
+            </p>
+            <p>Keeping your Tax Academy renewal current keeps our maintenance and update service in place.</p>
+          </div>
+          <p class="info-statement">Keep your maintenance current instead of waiting for a document problem to surface.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C. What renewal includes -->
+  <section class="section includes">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">What’s included</span>
+          <h2>What Your Renewal Keeps Active.</h2>
+        </div>
+      </div>
+      <div class="benefit-grid">
+        {
+          benefits.map((b) => (
+            <div class="card card-white">
+              <span class="icon-box">
+                <Icon name={b.icon} size={22} stroke={1.6} />
+              </span>
+              <h3>{b.title}</h3>
+              <p>{b.text}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="muted-line">Individual plan changes, filing assistance, and other additional work are listed separately below.</p>
+    </div>
+  </section>
+
+  <form method="post" action="/api/submit" id="renewal-form" data-renewal>
+    <input type="hidden" name="form_slug" value={form.slug} />
+
+    <!-- D. Renewal options -->
+    <section class="section" id="renewal-options">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Renewal options</span>
+            <h2>Select Your Maintenance Term.</h2>
+          </div>
+          <p>
+            Keep your annual maintenance active for one, two, or three years. Multi-year options prepay the selected
+            maintenance period.
+          </p>
+        </div>
+        <fieldset class="terms">
+          <legend class="sr-only">Maintenance term</legend>
+          {
+            renewalTerms.map((t) => (
+              <label class="term">
+                <input
+                  type="radio"
+                  name="term"
+                  value={t.id}
+                  checked={t.id === defaultTerm.id}
+                  required
+                  data-label={t.label}
+                  data-price={t.price}
+                />
+                {t.badge && <span class="term-badge">{t.badge}</span>}
+                <span class="term-years">
+                  {t.years} {t.years === 1 ? 'year' : 'years'}
+                </span>
+                <span class="term-price">{money(t.price)}</span>
+                <span class="term-label">{t.label}</span>
+                {t.saving && <span class="term-saving">{t.saving}</span>}
+                <span class="term-check" aria-hidden="true">
+                  <Icon name="check" size={16} />
+                </span>
+              </label>
+            ))
+          }
+        </fieldset>
+      </div>
+    </section>
+
+    <!-- E. Additional services + checkout -->
+    <section class="section checkout-section">
+      <div class="container checkout-grid">
+        <div>
+          <span class="eyebrow">Additional services</span>
+          <h2>Has Something Changed With Your Plan?</h2>
+          <p class="lede" style="margin-top:16px">
+            Changes to your business, trustees, or plan details may require additional paperwork. Select the services you
+            need, or ask our team for help identifying the appropriate service.
+          </p>
+          <a href="/contact/?topic=renewal-help" class="text-link" style="margin-top:16px">
+            Help Me Identify the Right Service<Icon name="arrowRight" size={16} />
+          </a>
+          <fieldset class="services">
+            <legend class="sr-only">Additional services (optional)</legend>
+            {
+              renewalServices.map((s) => (
+                <div class="service">
+                  <label class="service-main">
+                    <input type="checkbox" name="services" value={s.id} data-label={s.label} data-price={s.price} />
+                    <span class="service-text">
+                      <strong>{s.label}</strong>
+                      <span>{s.description}</span>
+                    </span>
+                    <span class="service-price">{money(s.price)}</span>
+                  </label>
+                  {s.info && (
+                    <p class="service-info">
+                      <Icon name="info" size={15} />
+                      {s.info}
+                    </p>
+                  )}
+                </div>
+              ))
+            }
+          </fieldset>
+        </div>
+
+        <div class="checkout" id="checkout">
+          <h2>Complete Your Plan Maintenance Renewal.</h2>
+          <FormError />
+          <ul class="summary" data-summary aria-live="polite">
+            <li><span>{defaultTerm.label}</span><span>{money(defaultTerm.price)}</span></li>
+          </ul>
+          <div class="summary-total">
+            <span>Total</span>
+            <strong data-total>{money(defaultTerm.price)}</strong>
+          </div>
+
+          <div class="checkout-fields">
+            {
+              form.fields.map((f) => {
+                const id = `renewal-${f.name}`;
+                return (
+                  <div class:list={['field', { full: f.type === 'textarea' }]}>
+                    <label for={id}>
+                      {f.label} {f.required ? <span class="req" aria-hidden="true">*</span> : <span class="optional">(optional)</span>}
+                    </label>
+                    {f.type === 'textarea' ? (
+                      <textarea id={id} name={f.name} maxlength="2000" rows="3" />
+                    ) : f.type === 'select' ? null : (
+                      <input id={id} name={f.name} type={f.type} required={f.required} autocomplete={f.autocomplete} maxlength="500" />
+                    )}
+                  </div>
+                );
+              })
+            }
+            <div class="hp" aria-hidden="true">
+              <label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label>
+            </div>
+            {turnstileKey && <div class="cf-turnstile full" data-sitekey={turnstileKey} />}
+          </div>
+
+          <button class="button checkout-button" type="submit">Complete Renewal<Icon name="arrowRight" size={17} /></button>
+          {/* TODO(confirm): replace with the approved payment flow once checkout is connected. */}
+          <p class="checkout-note">
+            <Icon name="lockKeyhole" size={15} />
+            No payment is taken on this page. Our team will confirm your account and send secure payment instructions for
+            the total shown.
+          </p>
+        </div>
+      </div>
+    </section>
+  </form>
+
+  <!-- F. Member learning reminder -->
+  <section class="container learning">
+    <div class="learning-row">
+      <span class="icon-box"><Icon name="library" size={22} stroke={1.6} /></span>
+      <div>
+        <h2>Your Renewal Keeps Practical Learning Within Reach.</h2>
+        <p>
+          Continue access to attorney-reviewed explanations of common plan questions, paperwork, and annual
+          responsibilities. Our learning library puts practical experience in one organized place, so you are not left
+          piecing together answers on your own.
+        </p>
+      </div>
+      <a href="/member-benefits/" class="text-link">See Member Benefits<Icon name="arrowRight" size={16} /></a>
+    </div>
+  </section>
+
+  <!-- G. Renewal questions -->
+  <Faq items={renewalFaqs} title="Renewal Questions" />
+
+  <!-- H. Closing a plan -->
+  <section class="section closing">
+    <div class="container closing-row">
+      <div>
+        <span class="eyebrow">Closing a plan</span>
+        <h2>Closing Your Plan? Complete the Proper Process.</h2>
+        <p class="lede" style="margin-top:14px">
+          Contact our team about the documentation and next steps for formally terminating your plan. Required document
+          updates may still need to be completed before termination.
+        </p>
+        <p class="closing-fee">Plan termination service: {money(terminationFee)}</p>
+      </div>
+      <a href="/contact/?topic=plan-termination" class="button button-dark">
+        Ask About Plan Termination<Icon name="arrowRight" size={17} />
+      </a>
+    </div>
+  </section>
+</SiteLayout>
+
+{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+
+<script>
+  // Keep the itemized summary and total in step with the selections.
+  // The server recalculates the total from the price list on submit.
+  const form = document.querySelector<HTMLFormElement>('[data-renewal]');
+  const summary = form?.querySelector<HTMLUListElement>('[data-summary]');
+  const totalEl = form?.querySelector<HTMLElement>('[data-total]');
+  const money = (n: number) => `$${n.toLocaleString('en-US')}`;
+
+  function render() {
+    if (!form || !summary || !totalEl) return;
+    const picked = [...form.querySelectorAll<HTMLInputElement>('input[name="term"]:checked, input[name="services"]:checked')];
+    summary.replaceChildren(
+      ...picked.map((input) => {
+        const li = document.createElement('li');
+        const label = document.createElement('span');
+        const price = document.createElement('span');
+        label.textContent = input.dataset.label!;
+        price.textContent = money(Number(input.dataset.price));
+        li.appendChild(label);
+        li.appendChild(price);
+        return li;
+      }),
+    );
+    totalEl.textContent = money(picked.reduce((sum, input) => sum + Number(input.dataset.price), 0));
+  }
+
+  form?.addEventListener('change', render);
+  render();
+</script>
+
+<style>
+  .hero-small {
+    margin-top: 20px;
+    color: var(--muted-on-dark);
+    font-size: 0.9rem;
+  }
+
+  /* B. Information panel (professional, not alarming) */
+  .info-panel {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+    padding: clamp(28px, 4vw, 48px);
+    border-left: 4px solid var(--lime);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--cream);
+  }
+
+  .info-panel h2 {
+    margin-bottom: 20px;
+  }
+
+  .info-copy {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    color: #2f3f42;
+  }
+
+  .info-statement {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  /* C. Benefits */
+  .includes {
+    padding-top: 0;
+  }
+
+  .benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .benefit-grid .icon-box {
+    margin-bottom: 18px;
+  }
+
+  .muted-line {
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* D. Terms */
+  #renewal-options {
+    background: var(--cream);
+    scroll-margin-top: 16px;
+  }
+
+  .terms {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .term {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 28px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .term input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .term:has(input:checked) {
+    border-color: var(--lime);
+    box-shadow: 0 0 0 4px rgba(116, 191, 68, 0.18);
+  }
+
+  .term:has(input:focus-visible) {
+    outline: 3px solid var(--lime);
+    outline-offset: 2px;
+  }
+
+  .term-badge {
+    align-self: flex-start;
+    margin-bottom: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--lime);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .term-years {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .term-price {
+    font-size: 2.6rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  .term-label {
+    font-weight: 600;
+  }
+
+  .term-saving {
+    color: var(--green);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .term-check {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    color: transparent;
+  }
+
+  .term:has(input:checked) .term-check {
+    border-color: var(--lime);
+    background: var(--lime);
+    color: var(--ink);
+  }
+
+  /* E. Services + checkout */
+  .checkout-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+
+  .services {
+    display: grid;
+    gap: 12px;
+    margin: 28px 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .service {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+  }
+
+  .service:has(input:checked) {
+    border-color: var(--lime);
+    background: #fbfdf8;
+  }
+
+  .service-main {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+    padding: 18px 20px;
+    cursor: pointer;
+  }
+
+  .service-main input {
+    width: 20px;
+    height: 20px;
+    margin: 2px 0 0;
+    accent-color: var(--green);
+  }
+
+  .service-text strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  .service-text span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.925rem;
+  }
+
+  .service-price {
+    font-weight: 700;
+  }
+
+  .service-info {
+    display: flex;
+    gap: 8px;
+    margin: 0 20px 18px 54px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .service-info :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--green);
+  }
+
+  .checkout {
+    position: sticky;
+    top: 24px;
+    padding: clamp(24px, 3vw, 36px);
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+    scroll-margin-top: 16px;
+  }
+
+  .checkout h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .summary {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0 0 16px;
+    list-style: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* :global because the script re-renders these items */
+  .summary :global(li) {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 0.95rem;
+  }
+
+  .summary :global(li span:last-child) {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 16px 0 24px;
+    font-weight: 600;
+  }
+
+  .summary-total strong {
+    font-size: 1.8rem;
+    letter-spacing: -0.02em;
+  }
+
+  .checkout-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .checkout-fields .full {
+    grid-column: 1 / -1;
+  }
+
+  .optional {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .checkout-button {
+    width: 100%;
+    margin-top: 24px;
+  }
+
+  .checkout-note {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .checkout-note :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+  }
+
+  /* F. Learning reminder (compact) */
+  .learning-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    padding: 24px 28px;
+    border-radius: var(--radius);
+    background: var(--cream);
+  }
+
+  .learning-row h2 {
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
+  }
+
+  .learning-row p {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.925rem;
+  }
+
+  /* H. Closing a plan */
+  .closing {
+    border-top: 1px solid var(--line);
+  }
+
+  .closing-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px 48px;
+  }
+
+  .closing-row > div {
+    max-width: 62ch;
+  }
+
+  .closing-fee {
+    margin-top: 12px;
+    font-weight: 600;
+  }
+
+  @media (max-width: 1020px) {
+    .benefit-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .checkout-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .checkout {
+      position: static;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .info-copy,
+    .terms {
+      grid-template-columns: 1fr;
+    }
+
+    .learning-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .info-panel {
+      grid-template-columns: 1fr;
+    }
+
+    .benefit-grid,
+    .checkout-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .service-info {
+      margin-left: 20px;
+    }
+  }
+</style>

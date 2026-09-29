@@ -1,0 +1,130 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import PublicFormFields from '../../components/PublicFormFields.astro';
+import { contactReasons, contactTopicAliases, getPublicForm } from '../../data/forms';
+import { site } from '../../data/site';
+
+const form = getPublicForm('contact')!;
+const topics = { reasons: contactReasons.map((r) => r.value), aliases: contactTopicAliases };
+---
+
+<SiteLayout
+  title="Contact Our Plan Support Team | The Tax Academy"
+  description="Questions about your renewal, plan documents, a business change, or switching providers? Tell us what you need."
+>
+  <PageHero
+    eyebrow="Contact"
+    title="How Can We Help With Your Plan?"
+    lede="Questions about your renewal, plan documents, a business change, or switching providers? Tell us what you need so we can direct your request to the right person."
+  />
+  <section class="section" id="contact-form">
+    <div class="container contact-layout">
+      <div class="form-card" data-topics={JSON.stringify(topics)}>
+        <PublicFormFields form={form} submitLabel="Send My Request">
+          <p class="privacy-note" slot="note">
+            <Icon name="shieldCheck" size={17} />
+            Please do not include Social Security numbers, account numbers, passwords, or sensitive plan documents in this
+            form. Our team will explain how to provide additional information when needed.
+          </p>
+        </PublicFormFields>
+      </div>
+      <aside class="contact-info">
+        <a href={site.phoneHref} class="info-row">
+          <span class="icon-box"><Icon name="phone" size={20} /></span>
+          <span><small>Call</small><strong>{site.phone}</strong></span>
+        </a>
+        {
+          site.email && (
+            <a href={`mailto:${site.email}`} class="info-row">
+              <span class="icon-box"><Icon name="mail" size={20} /></span>
+              <span><small>Email</small><strong>{site.email}</strong></span>
+            </a>
+          )
+        }
+        <div class="info-row">
+          <span class="icon-box"><Icon name="mapPin" size={20} /></span>
+          <span><small>Mailing address</small><strong>{site.address.line1}<br />{site.address.line2}</strong></span>
+        </div>
+        <div class="card">
+          <h3>Renewing your plan?</h3>
+          <p>Choose your maintenance term and any additional services on the renewal page.</p>
+          <a href="/renewal-page/" class="text-link" style="margin-top:12px">Renew My Plan<Icon name="arrowRight" size={16} /></a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</SiteLayout>
+
+<script>
+  // Preselect the reason from ?topic=<value> (e.g. /contact/?topic=plan-termination).
+  const holder = document.querySelector<HTMLElement>('[data-topics]');
+  const select = document.querySelector('select[name="reason"]') as HTMLSelectElement | null;
+  const topic = new URLSearchParams(location.search).get('topic');
+  if (holder && select && topic) {
+    const { reasons, aliases } = JSON.parse(holder.dataset.topics!) as {
+      reasons: string[];
+      aliases: Record<string, string>;
+    };
+    const value = aliases[topic] ?? topic;
+    if (reasons.includes(value)) select.value = value;
+  }
+</script>
+
+<style>
+  #contact-form {
+    scroll-margin-top: 16px;
+  }
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .form-card {
+    padding: clamp(24px, 4vw, 40px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .privacy-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--cream);
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+  .privacy-note :global(.icon) {
+    flex: none;
+    margin-top: 2px;
+    color: var(--green);
+  }
+  .contact-info {
+    display: grid;
+    gap: 16px;
+  }
+  .info-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    text-decoration: none;
+  }
+  .info-row small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  .info-row strong {
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .contact-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+import CtaButtons from './CtaButtons.astro';
+
+interface Props {
+  title: string;
+  text?: string;
+}
+
+const { title, text } = Astro.props;
+---
+
+<section class="cta-band">
+  <div class="container">
+    <div>
+      <h2>{title}</h2>
+      {text && <p>{text}</p>}
+    </div>
+    <CtaButtons on="lime" />
+  </div>
+</section>
+
+<style>
+  .cta-band {
+    background: var(--lime);
+    color: var(--ink);
+  }
+  .cta-band .container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px 48px;
+    padding-block: 56px;
+  }
+  .cta-band h2 {
+    max-width: 22ch;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+  }
+  .cta-band p {
+    max-width: 52ch;
+    margin-top: 10px;
+    opacity: 0.85;
+  }
+</style>

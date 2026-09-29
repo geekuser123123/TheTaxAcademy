@@ -2,10 +2,22 @@
 
 Website and client portal for The Tax Academy, LLC.
 
-- **Marketing site**: home, forms & requests, plan support, renewals, services, resources, contact. Prerendered to static HTML.
-- **Public request forms**: no sign-in needed. Submissions are saved to the database, show up for the team in the portal, and can optionally email the team.
-- **Client portal** (`/portal`): private documents, a message thread with the team, and a list of the client's requests.
-- **Team workspace** (`/portal/admin`): add clients and send invite links, share and receive documents, reply to messages, and work through form requests.
+- **Public site** (prerendered to static HTML), positioned around two actions: renewing plan maintenance and switching providers.
+
+  | Page | URL |
+  | --- | --- |
+  | Home | `/` (How It Works is `/#how-it-works`) |
+  | Member Benefits | `/member-benefits/` |
+  | Switch Providers | `/switch-providers/` (form at `#request-review`) |
+  | Renew My Plan | `/renewal-page/` |
+  | Contact | `/contact/` (`?topic=` preselects the reason) |
+  | Privacy Policy / Terms of Use | `/privacy-policy/`, `/terms-of-use/` |
+
+- **Public forms** (provider review, contact, renewal): saved to the database, shown to the team in the portal, and optionally emailed to the team.
+- **Member portal** (`/portal`, the Member Login destination): private documents, messages with the team, and the member's requests.
+- **Team workspace** (`/portal/admin`): add members and send invite links, share and receive documents, reply to messages, and work through form requests.
+
+Old URLs from the previous structure (`/forms/*`, `/services/*`, `/renewals`, `/privacy`, …) permanently redirect to their replacements; see `redirects` in `astro.config.mjs`.
 
 ## Stack
 
@@ -23,7 +35,7 @@ No third-party auth or database services are required. Passwords are hashed with
 
 ```
 src/
-  data/          Site content: contact details, forms, services, FAQs, videos  ← edit copy here
+  data/          Contact details, nav, forms, renewal prices, FAQs, screenshots  ← edit here
   pages/         Marketing pages (static) and portal pages (server-rendered)
     api/submit.ts        Public form handler
     portal/              Client portal
@@ -101,12 +113,23 @@ Public forms already use a hidden honeypot field, so this is only needed if spam
 
 ## Editing content
 
-Most copy lives in `src/data/`:
+Page copy lives in the page files under `src/pages/`. Shared data lives in `src/data/`:
 
-- `site.ts`: phone, email, address, navigation, disclaimer
-- `forms.ts`: every public form, its questions, and which ones are featured on the home page
-- `services.ts`: plan services and the advanced service categories
-- `faqs.ts`: FAQ answers
-- `resources.ts`: videos (add a YouTube ID to publish one) and guides
+- `site.ts`: phone, email, address, navigation, footer text, legal fine print, Member Login destination
+- `renewal.ts`: renewal terms, additional services, and their prices (the server recalculates totals from this file)
+- `forms.ts`: provider review, contact, and renewal form fields; contact reasons and `?topic=` values
+- `faqs.ts`: homepage, switching, and renewal questions
+- `media.ts`: approved screenshots of the member experience (sections stay hidden or fall back to text until added)
 
-Items marked `TODO(confirm)` need to be checked by the team before launch.
+## Before launch
+
+Items marked `TODO(confirm)` in the code need the team's input:
+
+- **Checkout**: this site does not take payments. "Complete Renewal" sends the team an itemized renewal request (term, services, total), and the page says payment instructions will follow. Connect the approved payment flow before launch, including the success, pending, and failed payment states.
+- **Pricing**: confirm every price in `src/data/renewal.ts` against the billing configuration. The old renewal page also showed $255 in some total fields, which needs reconciling.
+- **Form 5500-EZ**: state whether the service includes submission or preparation only.
+- **Termination fee** ($500) and the member-benefits inclusion list: confirm.
+- **Screenshots**: add approved screenshots of the member learning library to `src/data/media.ts`.
+- **Library topics**: confirm each category on Member Benefits has matching material.
+- **Legal pages**: replace the draft Privacy Policy and Terms of Use with the approved text from the current site.
+- **Contact details**: public email and mailing address in `src/data/site.ts`.

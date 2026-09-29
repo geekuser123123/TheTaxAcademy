@@ -1,0 +1,46 @@
+---
+// TODO(confirm): the brief says to preserve the existing Privacy Policy and apply only
+// approved updates. Replace this draft with the approved policy text from the current
+// site before launch.
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { site } from '../data/site';
+---
+
+<SiteLayout title="Privacy Policy | The Tax Academy">
+  <PageHero eyebrow="Legal" title="Privacy Policy" lede="How we handle the information you share with us." />
+  <section class="section">
+    <div class="container prose">
+      <h2>What we collect</h2>
+      <p>
+        When you submit a form, we collect the details you enter, such as your name, email, phone number, business or plan
+        name, and the specifics of your request. Members also store documents and messages in the private member area.
+      </p>
+      <p>
+        Please do not send Social Security numbers, account numbers, passwords, or sensitive plan documents through the
+        public forms. Our team will explain how to provide additional information when needed.
+      </p>
+      <h2>How we use it</h2>
+      <p>
+        We use your information to respond to your requests, provide the services in your agreement, and keep your plan
+        records. We do not sell your information.
+      </p>
+      <h2>How we protect it</h2>
+      <p>
+        The site and member area are served over encrypted connections. Member documents are stored privately and are
+        available only after sign-in. Passwords are stored as one-way hashes.
+      </p>
+      <h2>Sharing</h2>
+      <p>
+        We share information with outside professionals only when needed for work you have agreed to, or when required by
+        law.
+      </p>
+      <h2>Cookies</h2>
+      <p>We use a single essential cookie to keep members signed in. We do not use advertising cookies.</p>
+      <h2>Contact</h2>
+      <p>
+        Questions about your information? Call {site.phone} or <a href="/contact/">send us a message</a>.
+      </p>
+    </div>
+  </section>
+</SiteLayout>

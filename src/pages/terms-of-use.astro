@@ -1,0 +1,38 @@
+---
+// TODO(confirm): the brief says to preserve the existing Terms of Use and apply only
+// attorney-approved changes. Replace this draft with the approved terms from the current
+// site before launch. Our attorney and our team should confirm the terms describe the
+// required renewal, included document-update service, additional fees, customer
+// follow-through, and the consequences of a service lapse.
+import SiteLayout from '../layouts/SiteLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { disclaimer } from '../data/site';
+---
+
+<SiteLayout title="Terms of Use | The Tax Academy">
+  <PageHero eyebrow="Legal" title="Terms of Use" lede="The terms that apply to this website and our services." />
+  <section class="section">
+    <div class="container prose">
+      <p>{disclaimer}</p>
+      <h2>Educational materials</h2>
+      <p>
+        Educational materials, including attorney-reviewed materials, explain general processes. They do not create an
+        attorney-client relationship and are not legal, tax, accounting, investment, or financial advice for your
+        situation. Your plan documents and individual circumstances determine what applies.
+      </p>
+      <h2>Maintenance service and renewal</h2>
+      <p>
+        Annual renewal is required to keep your Tax Academy document maintenance, required-update service, administrative
+        support, and member learning access active. Covered maintenance is described on the renewal page; individually
+        requested changes and additional services are priced separately.
+      </p>
+      <p>
+        Document maintenance does not include oversight of every investment, transaction, or individual tax situation.
+        Plan owners and trustees remain responsible for plan operation, for providing requested information, and for
+        completing required signatures.
+      </p>
+      <h2>Retirement assets</h2>
+      <p>The Tax Academy does not hold or manage retirement assets.</p>
+    </div>
+  </section>
+</SiteLayout>

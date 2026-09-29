@@ -1,224 +1,110 @@
-// Public request forms. Anyone can submit these without signing in to the portal.
-// Every form also collects name, email, phone, and plan name (see FormFields).
+// Public forms, handled by src/pages/api/submit.ts.
+// Fields named `name`, `email`, `phone`, and `plan_name` are also stored in their own
+// columns so the team workspace can search and link them to portal clients.
 
 export type Field =
-  | { name: string; label: string; type: 'text' | 'date' | 'email' | 'tel'; required?: boolean; hint?: string }
-  | { name: string; label: string; type: 'textarea'; required?: boolean; hint?: string }
-  | { name: string; label: string; type: 'select'; options: string[]; required?: boolean; hint?: string };
+  | { name: string; label: string; type: 'text' | 'email' | 'tel'; required?: boolean; autocomplete?: string }
+  | { name: string; label: string; type: 'textarea'; required?: boolean }
+  | { name: string; label: string; type: 'select'; options: { value: string; label: string }[]; required?: boolean };
 
-export interface RequestForm {
+export interface PublicForm {
   slug: string;
   title: string;
-  summary: string;
-  minutes: number;
-  group: 'Plan documents' | 'Reporting & renewals' | 'Participants' | 'Talk to the team';
-  intro: string;
   fields: Field[];
-  featured?: boolean;
+  /** Where to send the visitor after a successful submission. */
+  successPath: string;
+  /** Anchor of the form on its page, used when returning validation errors. */
+  anchor: string;
 }
 
-export const forms: RequestForm[] = [
+export const planTypes = [
+  { value: 'solo-401k', label: 'Solo or self-directed 401(k)' },
+  { value: 'other-employer-plan', label: 'Other employer retirement plan' },
+  { value: 'not-sure', label: 'Not sure' },
+];
+
+// `?topic=<value>` on /contact/ preselects the matching reason.
+export const contactReasons = [
+  { value: 'annual-renewal', label: 'Annual renewal' },
+  { value: 'overdue-renewal', label: 'Overdue renewal' },
+  { value: 'switching-providers', label: 'Switching providers' },
+  { value: 'plan-document-change', label: 'Plan document change' },
+  { value: 'form-5500-ez', label: 'Form 5500-EZ assistance' },
+  { value: 'plan-termination', label: 'Plan termination' },
+  { value: 'statutory-agent', label: 'Statutory agent service' },
+  { value: 'other', label: 'Other' },
+];
+
+// Extra topic names used in links elsewhere on the site.
+export const contactTopicAliases: Record<string, string> = {
+  'renewal-help': 'annual-renewal',
+};
+
+export const forms: PublicForm[] = [
   {
-    slug: 'document-request',
-    title: 'Request a document',
-    summary: 'Find a missing plan document or ask for a copy.',
-    minutes: 3,
-    group: 'Plan documents',
-    featured: true,
-    intro:
-      'Tell us which document you need. If you are not sure of the name, describe what you are looking for and we will find it.',
+    slug: 'switch-review',
+    title: 'Provider review request',
+    successPath: '/switch-providers/received/',
+    anchor: 'request-review',
     fields: [
-      {
-        name: 'document_type',
-        label: 'Which document do you need?',
-        type: 'select',
-        required: true,
-        options: [
-          'Plan document / basic plan document',
-          'Adoption agreement',
-          'Summary plan description (SPD)',
-          'Trust agreement',
-          'Amendment or restatement',
-          'EIN confirmation letter',
-          'Form 5500-EZ copy',
-          'Not sure / other',
-        ],
-      },
-      { name: 'details', label: 'Anything else we should know?', type: 'textarea', hint: 'Tax year, who is asking for it, deadline, etc.' },
+      { name: 'name', label: 'Full name', type: 'text', required: true, autocomplete: 'name' },
+      { name: 'email', label: 'Email address', type: 'email', required: true, autocomplete: 'email' },
+      { name: 'plan_name', label: 'Business name', type: 'text', required: true, autocomplete: 'organization' },
+      { name: 'plan_type', label: 'Plan type', type: 'select', required: true, options: planTypes },
+      { name: 'phone', label: 'Phone number', type: 'tel', autocomplete: 'tel' },
+      { name: 'current_provider', label: 'Current document or support provider', type: 'text' },
+      { name: 'help', label: 'What would you like help with?', type: 'textarea' },
     ],
   },
   {
-    slug: 'annual-reporting',
-    title: 'Annual reporting / Form 5500-EZ',
-    summary: 'Start a reporting review or request preparation help.',
-    minutes: 5,
-    group: 'Reporting & renewals',
-    featured: true,
-    intro:
-      'Share the basics for the plan year. We will confirm what is required and what we need from you before anything is prepared.',
+    slug: 'contact',
+    title: 'Contact request',
+    successPath: '/contact/received/',
+    anchor: 'contact-form',
     fields: [
-      { name: 'plan_year', label: 'Plan year', type: 'text', required: true, hint: 'For example, 2025' },
-      {
-        name: 'year_end_balance',
-        label: 'Approximate total plan assets at year end',
-        type: 'select',
-        required: true,
-        options: ['Under $250,000', '$250,000 or more', 'Not sure'],
-      },
-      {
-        name: 'help_type',
-        label: 'What would you like help with?',
-        type: 'select',
-        required: true,
-        options: ['Review whether a filing is required', 'Prepare Form 5500-EZ', 'Late or missed filing', 'Other'],
-      },
-      { name: 'details', label: 'Notes', type: 'textarea', hint: 'Custodian or account names, prior filings, deadlines.' },
+      { name: 'name', label: 'Name', type: 'text', required: true, autocomplete: 'name' },
+      { name: 'email', label: 'Email', type: 'email', required: true, autocomplete: 'email' },
+      { name: 'phone', label: 'Phone', type: 'tel', autocomplete: 'tel' },
+      { name: 'reason', label: 'Reason for contacting us', type: 'select', required: true, options: contactReasons },
+      { name: 'message', label: 'Message', type: 'textarea', required: true },
     ],
   },
   {
-    slug: 'plan-amendment',
-    title: 'Plan amendment or update',
-    summary: 'Request changes to trustees, plan details, or features.',
-    minutes: 4,
-    group: 'Plan documents',
-    featured: true,
-    intro:
-      'Describe the change you want to make. We will review whether it needs an amendment and confirm scope before any work begins.',
-    fields: [
-      {
-        name: 'change_type',
-        label: 'What is changing?',
-        type: 'select',
-        required: true,
-        options: [
-          'Trustee change',
-          'Business name, address, or EIN',
-          'Add or remove a participant',
-          'Add a feature (loans, Roth, after-tax, etc.)',
-          'Required regulatory restatement',
-          'Other',
-        ],
-      },
-      { name: 'effective_date', label: 'Desired effective date', type: 'date' },
-      { name: 'details', label: 'Describe the change', type: 'textarea', required: true },
-    ],
-  },
-  {
-    slug: 'participant-loan',
-    title: 'Participant loan request',
-    summary: 'Ask about loan eligibility, documents, or repayments.',
-    minutes: 5,
-    group: 'Participants',
-    featured: true,
-    intro:
-      'Loans must follow your plan document and IRS rules. Share what you have in mind and we will confirm what is allowed and what paperwork is needed.',
-    fields: [
-      { name: 'participant_name', label: 'Participant name', type: 'text', required: true },
-      {
-        name: 'loan_topic',
-        label: 'What do you need?',
-        type: 'select',
-        required: true,
-        options: ['New loan', 'Loan documents / promissory note', 'Repayment question', 'Missed payment', 'Other'],
-      },
-      { name: 'amount', label: 'Approximate amount (if a new loan)', type: 'text' },
-      { name: 'details', label: 'Notes', type: 'textarea' },
-    ],
-  },
-  {
+    // Fields are rendered by the renewal page itself; term and services are validated
+    // against src/data/renewal.ts in the API.
     slug: 'renewal',
-    title: 'Annual renewal',
-    summary: 'Renew your 401(k) license or statutory agent service.',
-    minutes: 2,
-    group: 'Reporting & renewals',
-    intro:
-      'Let us know what you are renewing. We will confirm your renewal details and send payment instructions.',
+    title: 'Plan maintenance renewal',
+    successPath: '/renewal-page/received/',
+    anchor: 'checkout',
     fields: [
-      {
-        name: 'renewal_type',
-        label: 'What are you renewing?',
-        type: 'select',
-        required: true,
-        options: ['401(k) annual license fee', 'Statutory agent renewal', 'Both', 'Not sure'],
-      },
-      { name: 'business_name', label: 'Business / LLC name', type: 'text' },
-      { name: 'details', label: 'Notes', type: 'textarea', hint: 'Any changes to your business or contact details?' },
-    ],
-  },
-  {
-    slug: 'business-update',
-    title: 'Business or records update',
-    summary: 'Business changed or records need attention? Start here.',
-    minutes: 3,
-    group: 'Plan documents',
-    intro:
-      'New address, new owner, new employees, a closed business, or records that need catching up. Tell us what changed.',
-    fields: [
-      {
-        name: 'update_type',
-        label: 'What changed?',
-        type: 'select',
-        required: true,
-        options: [
-          'Contact or address change',
-          'Ownership change',
-          'Hiring employees',
-          'Business closed or sold',
-          'Records need catching up',
-          'Other',
-        ],
-      },
-      { name: 'details', label: 'Describe what changed', type: 'textarea', required: true },
-    ],
-  },
-  {
-    slug: 'contact-team',
-    title: 'Ask the team',
-    summary: 'Start with a real person on the team.',
-    minutes: 2,
-    group: 'Talk to the team',
-    intro: 'Tell us what is going on. We will help you find the right next step.',
-    fields: [
-      {
-        name: 'topic',
-        label: 'Topic',
-        type: 'select',
-        options: ['General question', 'Portal access help', 'Billing', 'Something else'],
-      },
-      { name: 'details', label: 'Your message', type: 'textarea', required: true },
-    ],
-  },
-  {
-    slug: 'advanced-planning',
-    title: 'Advanced planning idea',
-    summary: 'You don’t need the name of a service. Bring us the idea.',
-    minutes: 4,
-    group: 'Talk to the team',
-    intro:
-      'Describe the result you want. We will organize the facts, bring in the right professional, and agree on scope and fees before any work starts.',
-    fields: [
-      {
-        name: 'area',
-        label: 'Closest area',
-        type: 'select',
-        options: [
-          'Funding & Roth planning',
-          'Trusts & family legacy',
-          'Real estate, LLCs & investments',
-          'Asset protection',
-          'Taxes, distributions & review',
-          'Not sure',
-        ],
-      },
-      { name: 'details', label: 'What are you trying to accomplish?', type: 'textarea', required: true },
-      {
-        name: 'timeline',
-        label: 'Timeline',
-        type: 'select',
-        options: ['No rush', 'Within a few months', 'Within a few weeks', 'Urgent'],
-      },
+      { name: 'name', label: 'Full name', type: 'text', required: true, autocomplete: 'name' },
+      { name: 'email', label: 'Email address', type: 'email', required: true, autocomplete: 'email' },
+      { name: 'phone', label: 'Phone number', type: 'tel', autocomplete: 'tel' },
+      { name: 'plan_name', label: 'Business or plan name', type: 'text', required: true, autocomplete: 'organization' },
+      { name: 'notes', label: 'Anything we should know?', type: 'textarea' },
     ],
   },
 ];
 
-export const getForm = (slug: string) => forms.find((f) => f.slug === slug);
+// Titles for forms that earlier versions of the site used, so requests already in the
+// database still display properly in the portal.
+const legacyTitles: Record<string, string> = {
+  'document-request': 'Request a document',
+  'annual-reporting': 'Annual reporting / Form 5500-EZ',
+  'plan-amendment': 'Plan amendment or update',
+  'participant-loan': 'Participant loan request',
+  'business-update': 'Business or records update',
+  'contact-team': 'Ask the team',
+  'advanced-planning': 'Advanced planning idea',
+};
+
+export function getForm(slug: string): { title: string } | undefined {
+  const form = forms.find((f) => f.slug === slug);
+  if (form) return form;
+  return legacyTitles[slug] ? { title: legacyTitles[slug] } : undefined;
+}
+
+export const getPublicForm = (slug: string) => forms.find((f) => f.slug === slug);
+
+export const optionLabel = (options: { value: string; label: string }[], value: string) =>
+  options.find((o) => o.value === value)?.label;

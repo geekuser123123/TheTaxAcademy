@@ -1,0 +1,76 @@
+---
+// Renders a public form from its definition in src/data/forms.ts. Posts to /api/submit
+// and works without JavaScript; validation errors come back as ?error=<code>.
+import Icon from './Icon.astro';
+import FormError from './FormError.astro';
+import type { PublicForm } from '../data/forms';
+
+interface Props {
+  form: PublicForm;
+  submitLabel: string;
+  /** Preselected option values, keyed by field name. */
+  defaults?: Record<string, string>;
+}
+
+const { form, submitLabel, defaults = {} } = Astro.props;
+const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+---
+
+<form method="post" action="/api/submit" class="public-form">
+  <input type="hidden" name="form_slug" value={form.slug} />
+  <FormError />
+  <div class="form-grid">
+    {
+      form.fields.map((f) => {
+        const id = `${form.slug}-${f.name}`;
+        return (
+          <div class:list={['field', { full: f.type === 'textarea' }]}>
+            <label for={id}>
+              {f.label} {f.required ? <span class="req" aria-hidden="true">*</span> : <span class="optional">(optional)</span>}
+            </label>
+            {f.type === 'textarea' ? (
+              <textarea id={id} name={f.name} required={f.required} maxlength="5000" />
+            ) : f.type === 'select' ? (
+              <select id={id} name={f.name} required={f.required} data-default={defaults[f.name]}>
+                <option value="">Choose one</option>
+                {f.options.map((o) => (
+                  <option value={o.value} selected={defaults[f.name] === o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input id={id} name={f.name} type={f.type} required={f.required} autocomplete={f.autocomplete} maxlength="500" />
+            )}
+          </div>
+        );
+      })
+    }
+    <div class="hp" aria-hidden="true">
+      <label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label>
+    </div>
+    {
+      turnstileKey && (
+        <div class="full">
+          <div class="cf-turnstile" data-sitekey={turnstileKey} />
+        </div>
+      )
+    }
+  </div>
+  <slot name="note" />
+  <div class="form-actions">
+    <button class="button" type="submit">{submitLabel}<Icon name="arrowRight" size={17} /></button>
+  </div>
+</form>
+
+{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+
+<style>
+  .optional {
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .form-actions {
+    margin-top: 24px;
+  }
+</style>
