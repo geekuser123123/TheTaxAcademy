@@ -26,25 +26,30 @@ import { libraryScreenshot } from '../data/media';
       height="1024"
       fetchpriority="high"
     />
-    <div class="container hero-grid">
-      <h1 class="hero-title">
-        <span class="hero-line" data-line="1">Keep Your Self-Directed</span>{' '}
-        <span class="hero-line" data-line="2">401(k) Current.</span>
-      </h1>
-      <div class="hero-copy">
-        <p class="hero-lead">
-          Required document updates, ongoing administrative support, and practical education to help you{' '}
-          <span class="hl">understand and maintain your plan.</span>
-        </p>
-        <p class="hero-experience">{experience}</p>
-        <div class="hero-actions">
-          <CtaButtons />
+    <div class="hero-inner">
+      <div class="container hero-bottom">
+        <h1 class="hero-title">
+          <span class="hero-line" data-line="1">Keep Your Self-Directed</span>{' '}
+          <span class="hero-line" data-line="2">401(k) Current.</span>
+        </h1>
+      </div>
+      {/* Same container as the header, so the copy lines up with the nav */}
+      <div class="container hero-top">
+        <div class="hero-copy">
+          <p class="hero-lead">
+            Required document updates, ongoing administrative support, and practical education to help you{' '}
+            <span class="hl">understand and maintain your plan.</span>
+          </p>
+          <p class="hero-experience">{experience}</p>
+          <div class="hero-actions">
+            <CtaButtons />
+          </div>
+          <ul class="benefit-line" aria-label="What you get">
+            <li>Ongoing document maintenance</li>
+            <li>Attorney-reviewed learning</li>
+            <li>Experienced support</li>
+          </ul>
         </div>
-        <ul class="benefit-line" aria-label="What you get">
-          <li>Ongoing document maintenance</li>
-          <li>Attorney-reviewed learning</li>
-          <li>Experienced support</li>
-        </ul>
       </div>
     </div>
   </section>
@@ -242,31 +247,39 @@ import { libraryScreenshot } from '../data/media';
       rgba(0, 20, 24, 0.42);
   }
 
-  .hero-grid {
-    /* Wider than the site container so the 160px headline has room on large screens */
+  .hero {
+    /* The headline gets a wider area than the site container so 160px fits on large screens */
     --hero-max: 1680px;
-    max-width: calc(var(--hero-max) + var(--gutter) * 2);
-    display: grid;
-    grid-template-columns: 1fr minmax(0, 560px);
-    grid-template-areas:
-      '. copy'
-      'title title';
-    align-content: space-between;
-    gap: clamp(32px, 5vw, 64px) 0;
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(32px, 5vw, 64px);
     min-height: min(100vh, 980px);
     padding-block: calc(var(--plate-h) - 40px) clamp(32px, 4vw, 56px);
   }
 
+  /* Copy sits above the headline visually, but the headline comes first in the markup */
+  .hero-top {
+    order: -1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .hero-bottom {
+    max-width: calc(var(--hero-max) + var(--gutter) * 2);
+  }
+
   .hero-copy {
-    grid-area: copy;
-    align-self: start;
+    width: 100%;
+    max-width: 560px;
     margin-top: 100px;
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   }
 
   .hero-title {
-    grid-area: title;
-    align-self: end;
     /* 160px where it fits; below that, scale so the first line fills the available width.
        -4.8px at 160px is -0.03em, so the spacing scales with the size. */
     font-family: 'Rethink Sans Variable', 'Rethink Sans', sans-serif;
@@ -331,18 +344,20 @@ import { libraryScreenshot } from '../data/media';
   }
 
   @media (max-width: 900px) {
-    .hero-grid {
-      grid-template-columns: 1fr;
-      grid-template-areas:
-        'title'
-        'copy';
-      align-content: end;
+    .hero-inner {
+      justify-content: flex-end;
       gap: 28px;
       min-height: 0;
       padding-top: calc(var(--plate-h) + 48px);
     }
 
+    .hero-top {
+      order: 0;
+      justify-content: flex-start;
+    }
+
     .hero-copy {
+      max-width: 640px;
       margin-top: 0;
     }
 
