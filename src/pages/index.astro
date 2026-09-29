@@ -27,7 +27,7 @@ import { libraryScreenshot } from '../data/media';
       fetchpriority="high"
     />
     <div class="container hero-grid">
-      <h1 class="hero-title" data-fit-title>
+      <h1 class="hero-title">
         <span class="hero-line" data-line="1">Keep Your Self-Directed</span>{' '}
         <span class="hero-line" data-line="2">401(k) Current.</span>
       </h1>
@@ -211,35 +211,6 @@ import { libraryScreenshot } from '../data/media';
   />
 </SiteLayout>
 
-<script>
-  // Size the hero headline like the reference design: line 1 spans the container width,
-  // line 2 is letter-spaced out to match it (capped so it never looks stretched).
-  const title = document.querySelector<HTMLElement>('[data-fit-title]');
-  const lines = title ? [...title.querySelectorAll<HTMLElement>('.hero-line')] : [];
-
-  function fitTitle() {
-    if (!title || lines.length !== 2) return;
-    const [first, second] = lines;
-    title.style.fontSize = '';
-    second.style.letterSpacing = '';
-    if (getComputedStyle(first).display !== 'block') return; // phones: natural wrapping
-    const available = title.clientWidth;
-    const base = parseFloat(getComputedStyle(title).fontSize);
-    const size = Math.min((base * available) / first.scrollWidth, 170);
-    title.style.fontSize = `${size}px`;
-    const gap = first.scrollWidth - second.scrollWidth;
-    const chars = (second.textContent ?? '').trim().length - 1;
-    if (gap > 0 && chars > 0) {
-      const extra = Math.min(gap / chars, size * 0.12);
-      second.style.letterSpacing = `calc(-0.035em + ${extra}px)`;
-    }
-  }
-
-  fitTitle();
-  document.fonts?.ready.then(fitTitle);
-  addEventListener('resize', fitTitle);
-</script>
-
 <style>
   /* A. Hero — full-bleed photo, copy on the right, oversized two-line headline along the bottom */
   .hero {
@@ -272,6 +243,9 @@ import { libraryScreenshot } from '../data/media';
   }
 
   .hero-grid {
+    /* Wider than the site container so the 160px headline has room on large screens */
+    --hero-max: 1680px;
+    max-width: calc(var(--hero-max) + var(--gutter) * 2);
     display: grid;
     grid-template-columns: 1fr minmax(0, 560px);
     grid-template-areas:
@@ -286,23 +260,28 @@ import { libraryScreenshot } from '../data/media';
   .hero-copy {
     grid-area: copy;
     align-self: start;
+    margin-top: 100px;
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   }
 
   .hero-title {
     grid-area: title;
     align-self: end;
-    /* Fallback size; the script below fits line 1 to the container width */
-    font-size: clamp(2.6rem, 8vw, 9rem);
-    font-weight: 600;
+    /* 160px where it fits; below that, scale so the first line fills the available width.
+       -4.8px at 160px is -0.03em, so the spacing scales with the size. */
+    font-family: 'Rethink Sans Variable', 'Rethink Sans', sans-serif;
+    font-size: min(160px, (min(100vw, var(--hero-max) + var(--gutter) * 2) - var(--gutter) * 2) / var(--title-ratio));
+    font-weight: 700;
     line-height: 0.95;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.03em;
+    color: #fff;
     text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
+    /* Width of "Keep Your Self-Directed" divided by font size (measured), plus a little slack */
+    --title-ratio: 10.2;
   }
 
   .hero-line {
     display: block;
-    width: max-content; /* so the script can measure the text itself */
     white-space: nowrap;
   }
 
@@ -363,6 +342,10 @@ import { libraryScreenshot } from '../data/media';
       padding-top: calc(var(--plate-h) + 48px);
     }
 
+    .hero-copy {
+      margin-top: 0;
+    }
+
     .hero::before {
       background:
         linear-gradient(0deg, rgba(0, 20, 24, 0.9) 0%, rgba(0, 20, 24, 0.7) 60%, rgba(0, 20, 24, 0.5) 100%);
@@ -371,6 +354,10 @@ import { libraryScreenshot } from '../data/media';
 
   /* Phones: let the headline wrap naturally */
   @media (max-width: 560px) {
+    .hero-title {
+      font-size: clamp(2.6rem, 11vw, 3.4rem);
+    }
+
     .hero-line {
       display: inline;
       white-space: normal;
