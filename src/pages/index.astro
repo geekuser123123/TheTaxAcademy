@@ -27,11 +27,14 @@ import { libraryScreenshot } from '../data/media';
       fetchpriority="high"
     />
     <div class="container hero-grid">
+      <h1 class="hero-title" data-fit-title>
+        <span class="hero-line" data-line="1">Keep Your Self-Directed</span>{' '}
+        <span class="hero-line" data-line="2">401(k) Current.</span>
+      </h1>
       <div class="hero-copy">
-        <h1><span class="h1-line">Keep Your Self-Directed</span> <span class="h1-line">401(k) Current.</span></h1>
-        <p>
-          Required document updates, ongoing administrative support, and practical education to help you understand and
-          maintain your plan.
+        <p class="hero-lead">
+          Required document updates, ongoing administrative support, and practical education to help you{' '}
+          <span class="hl">understand and maintain your plan.</span>
         </p>
         <p class="hero-experience">{experience}</p>
         <div class="hero-actions">
@@ -208,8 +211,37 @@ import { libraryScreenshot } from '../data/media';
   />
 </SiteLayout>
 
+<script>
+  // Size the hero headline like the reference design: line 1 spans the container width,
+  // line 2 is letter-spaced out to match it (capped so it never looks stretched).
+  const title = document.querySelector<HTMLElement>('[data-fit-title]');
+  const lines = title ? [...title.querySelectorAll<HTMLElement>('.hero-line')] : [];
+
+  function fitTitle() {
+    if (!title || lines.length !== 2) return;
+    const [first, second] = lines;
+    title.style.fontSize = '';
+    second.style.letterSpacing = '';
+    if (getComputedStyle(first).display !== 'block') return; // phones: natural wrapping
+    const available = title.clientWidth;
+    const base = parseFloat(getComputedStyle(title).fontSize);
+    const size = Math.min((base * available) / first.scrollWidth, 170);
+    title.style.fontSize = `${size}px`;
+    const gap = first.scrollWidth - second.scrollWidth;
+    const chars = (second.textContent ?? '').trim().length - 1;
+    if (gap > 0 && chars > 0) {
+      const extra = Math.min(gap / chars, size * 0.12);
+      second.style.letterSpacing = `calc(-0.035em + ${extra}px)`;
+    }
+  }
+
+  fitTitle();
+  document.fonts?.ready.then(fitTitle);
+  addEventListener('resize', fitTitle);
+</script>
+
 <style>
-  /* A. Hero — photo background; compact so the headline and both buttons show on load */
+  /* A. Hero — full-bleed photo, copy on the right, oversized two-line headline along the bottom */
   .hero {
     position: relative;
     isolation: isolate;
@@ -225,70 +257,83 @@ import { libraryScreenshot } from '../data/media';
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 70% 30%;
+    object-position: 50% 30%;
   }
 
-  /* Darken toward the left so the copy stays readable over the photo */
+  /* Light overall tint, deeper toward the bottom where the headline sits */
   .hero::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(90deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.78) 45%, rgba(0, 29, 33, 0.4) 76%, rgba(0, 29, 33, 0.15) 100%),
-      linear-gradient(0deg, rgba(0, 29, 33, 0.55) 0%, transparent 40%);
+      linear-gradient(0deg, rgba(0, 20, 24, 0.72) 0%, rgba(0, 20, 24, 0.2) 45%, transparent 70%),
+      rgba(0, 20, 24, 0.42);
   }
 
   .hero-grid {
     display: grid;
-    min-height: min(92vh, 860px);
-    align-content: center;
-    padding-block: calc(var(--plate-h) + clamp(16px, 3vw, 40px)) clamp(56px, 7vw, 96px);
+    grid-template-columns: 1fr minmax(0, 560px);
+    grid-template-areas:
+      '. copy'
+      'title title';
+    align-content: space-between;
+    gap: clamp(32px, 5vw, 64px) 0;
+    min-height: min(100vh, 980px);
+    padding-block: calc(var(--plate-h) - 40px) clamp(32px, 4vw, 56px);
   }
 
-  .hero h1 {
-    font-size: clamp(2.6rem, 6.6vw, 6rem);
-    line-height: 1;
-    letter-spacing: -0.04em;
+  .hero-copy {
+    grid-area: copy;
+    align-self: start;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   }
 
-  /* Two lines on tablet and up; natural wrapping on phones */
-  @media (min-width: 700px) {
-    .h1-line {
-      display: block;
-      white-space: nowrap;
-    }
+  .hero-title {
+    grid-area: title;
+    align-self: end;
+    /* Fallback size; the script below fits line 1 to the container width */
+    font-size: clamp(2.6rem, 8vw, 9rem);
+    font-weight: 600;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.25);
   }
 
-  .hero-copy > :not(h1) {
-    max-width: 640px;
+  .hero-line {
+    display: block;
+    width: max-content; /* so the script can measure the text itself */
+    white-space: nowrap;
   }
 
-  .hero-copy > p {
-    max-width: 52ch;
-    margin-top: 20px;
-    color: #d3e0e0;
-    font-size: 1.125rem;
-  }
-
-  .hero-copy > p.hero-experience {
-    margin-top: 12px;
-    color: #fff;
+  .hero-lead {
+    font-size: clamp(1.1rem, 1.5vw, 1.35rem);
     font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .hl {
+    color: #b6e59a;
+  }
+
+  .hero-experience {
+    margin-top: 14px;
+    color: #e3ecec;
+    font-size: 1rem;
   }
 
   .hero-actions {
-    margin-top: 28px;
+    margin-top: 26px;
   }
 
   .benefit-line {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 22px;
-    margin: 28px 0 0;
+    margin: 24px 0 0;
     padding: 0;
     list-style: none;
-    color: #d3e0e0;
+    color: #e3ecec;
     font-size: 0.9rem;
   }
 
@@ -304,6 +349,32 @@ import { libraryScreenshot } from '../data/media';
     height: 6px;
     border-radius: 50%;
     background: var(--lime);
+  }
+
+  @media (max-width: 900px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        'title'
+        'copy';
+      align-content: end;
+      gap: 28px;
+      min-height: 0;
+      padding-top: calc(var(--plate-h) + 48px);
+    }
+
+    .hero::before {
+      background:
+        linear-gradient(0deg, rgba(0, 20, 24, 0.9) 0%, rgba(0, 20, 24, 0.7) 60%, rgba(0, 20, 24, 0.5) 100%);
+    }
+  }
+
+  /* Phones: let the headline wrap naturally */
+  @media (max-width: 560px) {
+    .hero-line {
+      display: inline;
+      white-space: normal;
+    }
   }
 
   /* B. Maintenance — the most prominent content section */
@@ -534,11 +605,6 @@ import { libraryScreenshot } from '../data/media';
     .library-grid,
     .switch-grid {
       grid-template-columns: 1fr;
-    }
-
-    /* On narrow screens the text spans the photo: darken it evenly */
-    .hero::before {
-      background: linear-gradient(0deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.78) 55%, rgba(0, 29, 33, 0.6) 100%);
     }
   }
 </style>
