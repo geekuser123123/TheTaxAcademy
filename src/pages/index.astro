@@ -10,11 +10,22 @@ import { libraryScreenshot } from '../data/media';
 ---
 
 <SiteLayout
+  overlayHeader
   title="Self-Directed 401(k) Maintenance & Support | The Tax Academy"
   description="Required document updates, ongoing administrative support, and practical education to help you understand and maintain your self-directed 401(k)."
 >
   <!-- A. Main introduction -->
   <section class="hero on-dark">
+    <img
+      class="hero-bg"
+      src="/images/hero-team.webp"
+      srcset="/images/hero-team-900.webp 900w, /images/hero-team.webp 1536w"
+      sizes="100vw"
+      alt=""
+      width="1536"
+      height="1024"
+      fetchpriority="high"
+    />
     <div class="container hero-grid">
       <div class="hero-copy">
         <h1>Keep Your Self-Directed 401(k) Current.</h1>
@@ -31,9 +42,6 @@ import { libraryScreenshot } from '../data/media';
           <li>Attorney-reviewed learning</li>
           <li>Experienced support</li>
         </ul>
-      </div>
-      <div class="hero-seal" aria-hidden="true">
-        <img src="/images/seal.webp" alt="" width="400" height="400" />
       </div>
     </div>
   </section>
@@ -201,35 +209,58 @@ import { libraryScreenshot } from '../data/media';
 </SiteLayout>
 
 <style>
-  /* A. Hero — compact so the headline and both buttons are visible on load */
+  /* A. Hero — photo background; compact so the headline and both buttons show on load */
   .hero {
     position: relative;
-    background:
-      radial-gradient(900px 520px at 85% 55%, rgba(31, 154, 75, 0.26), transparent 62%),
-      var(--ink);
+    isolation: isolate;
+    background: var(--ink);
     color: #fff;
     overflow: hidden;
   }
 
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% 30%;
+  }
+
+  /* Darken toward the left so the copy stays readable over the photo */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(90deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.74) 40%, rgba(0, 29, 33, 0.28) 74%, rgba(0, 29, 33, 0.12) 100%),
+      linear-gradient(0deg, rgba(0, 29, 33, 0.55) 0%, transparent 40%);
+  }
+
   .hero-grid {
     display: grid;
-    grid-template-columns: 1.4fr 0.6fr;
-    gap: clamp(32px, 5vw, 72px);
-    align-items: center;
-    padding-block: calc(var(--plate-overhang) + clamp(24px, 4vw, 44px)) clamp(48px, 6vw, 80px);
+    min-height: min(92vh, 860px);
+    align-content: center;
+    padding-block: calc(var(--plate-h) + clamp(16px, 3vw, 40px)) clamp(56px, 7vw, 96px);
   }
 
   .hero h1 {
     max-width: 15ch;
-    font-size: clamp(2.4rem, 5.4vw, 4.4rem);
+    font-size: clamp(2.5rem, 5.6vw, 4.6rem);
     line-height: 1.02;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.035em;
+  }
+
+  .hero-copy {
+    max-width: 640px;
   }
 
   .hero-copy > p {
     max-width: 52ch;
     margin-top: 20px;
-    color: var(--muted-on-dark);
+    color: #d3e0e0;
     font-size: 1.125rem;
   }
 
@@ -246,41 +277,26 @@ import { libraryScreenshot } from '../data/media';
   .benefit-line {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 0;
+    gap: 8px 22px;
     margin: 28px 0 0;
     padding: 0;
     list-style: none;
-    color: var(--muted-on-dark);
+    color: #d3e0e0;
     font-size: 0.9rem;
   }
 
-  .benefit-line li + li::before {
-    content: '·';
-    margin: 0 10px;
-    color: var(--lime);
-    font-weight: 700;
+  .benefit-line li {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  .hero-seal {
-    position: relative;
-    display: grid;
-    place-items: center;
-  }
-
-  .hero-seal::before {
+  .benefit-line li::before {
     content: '';
-    position: absolute;
-    inset: 8%;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(116, 191, 68, 0.35), transparent 70%);
-    filter: blur(24px);
-  }
-
-  .hero-seal img {
-    position: relative;
-    width: min(100%, 320px);
-    height: auto;
-    filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+    background: var(--lime);
   }
 
   /* B. Maintenance — the most prominent content section */
@@ -499,15 +515,15 @@ import { libraryScreenshot } from '../data/media';
   }
 
   @media (max-width: 900px) {
-    .hero-grid,
     .maintenance-grid,
     .library-grid,
     .switch-grid {
       grid-template-columns: 1fr;
     }
 
-    .hero-seal {
-      display: none;
+    /* On narrow screens the text spans the photo: darken it evenly */
+    .hero::before {
+      background: linear-gradient(0deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.78) 55%, rgba(0, 29, 33, 0.6) 100%);
     }
   }
 </style>

@@ -23,6 +23,7 @@
   --danger-soft: #fdecea;
 
   --font: 'DM Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Rethink Sans Variable', var(--font);
   --radius: 14px;
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(0, 29, 33, 0.06), 0 8px 24px rgba(0, 29, 33, 0.06);
@@ -77,6 +78,7 @@ h2,
 h3,
 h4 {
   margin: 0;
+  font-family: var(--font-heading);
   line-height: 1.12;
   letter-spacing: -0.02em;
   font-weight: 600;
@@ -252,34 +254,20 @@ p {
    Site chrome
    ========================================================================== */
 
-.topbar {
-  background: #00151a;
-  color: var(--muted-on-dark);
-  font-size: 0.8rem;
-}
-
-.topbar .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 36px;
-  gap: 16px;
-}
-
-.topbar a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-}
 
 .header {
   position: relative;
   z-index: 20;
   background: var(--ink);
   color: #fff;
+}
+
+.header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: transparent;
 }
 
 .header .container {
@@ -405,14 +393,6 @@ p {
 }
 
 @media (max-width: 560px) {
-  .topbar span {
-    display: none;
-  }
-
-  .topbar .container {
-    justify-content: flex-end;
-  }
-
   :root {
     --plate-w: 206px;
     --plate-h: 136px;

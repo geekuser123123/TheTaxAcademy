@@ -1,5 +1,6 @@
 ---
 import '@fontsource-variable/dm-sans';
+import '@fontsource-variable/rethink-sans';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -10,9 +11,11 @@ interface Props {
   title: string;
   description?: string;
   noindex?: boolean;
+  /** Float the header over the page's first section (used with a hero image). */
+  overlayHeader?: boolean;
 }
 
-const { title: fullTitle, description = site.description, noindex = false } = Astro.props;
+const { title: fullTitle, description = site.description, noindex = false, overlayHeader = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -36,7 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <a href="#main" class="skip">Skip to content</a>
-    <Header />
+    <Header overlay={overlayHeader} />
     <main id="main">
       <slot />
     </main>

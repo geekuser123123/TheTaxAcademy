@@ -2,17 +2,17 @@
 import Icon from './Icon.astro';
 import { site, mainNav } from '../data/site';
 
+interface Props {
+  /** Float the header over a full-bleed hero image (home page). */
+  overlay?: boolean;
+}
+
+const { overlay = false } = Astro.props;
 const path = Astro.url.pathname;
 const isActive = (href: string) => !href.includes('#') && path.startsWith(href);
 ---
 
-<div class="topbar">
-  <div class="container">
-    <span>{site.tagline}</span>
-    <a href={site.phoneHref}><Icon name="phone" size={13} />{site.phone}</a>
-  </div>
-</div>
-<header class="header">
+<header class:list={['header', { 'header-overlay': overlay }]}>
   <div class="container">
     <a href="/" class="brand" aria-label={`${site.name} home`}>
       <img src="/images/logo-lockup.webp" alt={site.legalName} width="440" height="362" />
