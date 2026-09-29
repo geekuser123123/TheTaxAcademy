@@ -7,6 +7,27 @@ import CtaBand from '../components/CtaBand.astro';
 import { site, experience } from '../data/site';
 import { homeFaqs } from '../data/faqs';
 import { libraryScreenshot } from '../data/media';
+
+const howSteps = [
+  {
+    image: '/images/how-maintenance.webp',
+    alt: 'Business owner reviewing plan documents on a laptop',
+    title: 'Keep Your Maintenance Active',
+    text: 'Renew your annual service so our team can continue providing covered document updates, maintenance, and administrative support.',
+  },
+  {
+    image: '/images/how-learning.webp',
+    alt: 'Plan owner reading through printed plan materials',
+    title: 'Use Your Member Learning Library',
+    text: 'Find practical explanations of common plan questions, routine paperwork, and annual responsibilities in one organized place.',
+  },
+  {
+    image: '/images/how-changes.webp',
+    alt: 'Two business partners reviewing details on a tablet',
+    title: 'Tell Us When Something Changes',
+    text: 'Changes to your business, trustees, or plan details may require additional paperwork. Our team helps identify the appropriate next step.',
+  },
+];
 ---
 
 <SiteLayout
@@ -54,6 +75,32 @@ import { libraryScreenshot } from '../data/media';
     </div>
   </section>
 
+  <!-- C. How it works (placed right after the hero) -->
+  <section class="how on-dark" id="how-it-works">
+    <div class="how-grid">
+      <div class="how-intro">
+        <div>
+          <span class="eyebrow">How it works</span>
+          <h2>Maintain Your Plan. Understand Your Responsibilities. Know Where to Turn.</h2>
+          <p>
+            Your annual service covers the maintenance described on the renewal page. Individually requested changes and
+            additional services are identified separately.
+          </p>
+        </div>
+        <a href="/member-benefits/" class="button">See Member Benefits<Icon name="arrowRight" size={17} /></a>
+      </div>
+      {
+        howSteps.map((step) => (
+          <article class="how-step">
+            <img src={step.image} alt={step.alt} width="640" height="672" loading="lazy" />
+            <h3>{step.title}</h3>
+            <p>{step.text}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
   <!-- B. Why ongoing maintenance matters -->
   <section class="section maintenance">
     <div class="container maintenance-grid">
@@ -79,54 +126,6 @@ import { libraryScreenshot } from '../data/media';
           <p>Keeping your renewal current keeps our maintenance and update service active.</p>
           <a href="/renewal-page/" class="text-link">Renew My Plan<Icon name="arrowRight" size={16} /></a>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- C. How it works -->
-  <section class="section how on-dark" id="how-it-works">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <span class="eyebrow">How it works</span>
-          <h2>Maintain Your Plan. Understand Your Responsibilities. Know Where to Turn.</h2>
-        </div>
-      </div>
-      <div class="grid-3">
-        <div class="card how-card">
-          <span class="how-num">01</span>
-          <span class="icon-box"><Icon name="calendarCheck" size={22} stroke={1.6} /></span>
-          <h3>Keep Your Maintenance Active</h3>
-          <p>
-            Renew your annual service so our team can continue providing covered document updates, maintenance, and
-            administrative support.
-          </p>
-        </div>
-        <div class="card how-card">
-          <span class="how-num">02</span>
-          <span class="icon-box"><Icon name="library" size={22} stroke={1.6} /></span>
-          <h3>Use Your Member Learning Library</h3>
-          <p>
-            Find practical explanations of common plan questions, routine paperwork, and annual responsibilities in one
-            organized place.
-          </p>
-        </div>
-        <div class="card how-card">
-          <span class="how-num">03</span>
-          <span class="icon-box"><Icon name="filePen" size={22} stroke={1.6} /></span>
-          <h3>Tell Us When Something Changes</h3>
-          <p>
-            Changes to your business, trustees, or plan details may require additional paperwork. Our team helps identify
-            the appropriate next step.
-          </p>
-        </div>
-      </div>
-      <div class="how-foot">
-        <p>
-          Your annual service covers the maintenance described on the renewal page. Individually requested changes and
-          additional services are identified separately.
-        </p>
-        <a href="/member-benefits/" class="button">See Member Benefits<Icon name="arrowRight" size={17} /></a>
       </div>
     </div>
   </section>
@@ -456,59 +455,96 @@ import { libraryScreenshot } from '../data/media';
     font-weight: 500;
   }
 
-  /* C. How it works */
-  #how-it-works {
-    scroll-margin-top: 24px;
-  }
-
+  /* C. How it works — full-width band, four columns split by hairlines */
   .how {
-    background:
-      radial-gradient(700px 360px at 100% 0%, rgba(31, 154, 75, 0.22), transparent 65%),
-      var(--ink);
+    background: var(--ink);
     color: #fff;
+    scroll-margin-top: 0;
   }
 
-  #how-it-works h2 {
-    max-width: 24ch;
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .how-card {
-    position: relative;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--line-dark);
+  .how-grid > * {
+    padding: clamp(56px, 6vw, 110px) clamp(20px, 2vw, 32px) clamp(56px, 6vw, 120px);
   }
 
-  .how-card p {
-    color: var(--muted-on-dark);
+  .how-grid > * + * {
+    border-left: 1px solid var(--line-dark);
   }
 
-  .how-card .icon-box {
-    margin-bottom: 20px;
-  }
-
-  .how-num {
-    position: absolute;
-    top: 24px;
-    right: 28px;
-    color: var(--muted-on-dark);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-  }
-
-  .how-foot {
+  .how-intro {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
     justify-content: space-between;
-    gap: 16px 32px;
-    margin-top: 32px;
+    gap: 40px;
   }
 
-  .how-foot p {
-    max-width: 62ch;
+  .how-intro h2 {
+    margin-bottom: 20px;
+    font-size: clamp(1.7rem, 2.3vw, 2.35rem);
+    line-height: 1.15;
+  }
+
+  .how-intro p {
+    max-width: 36ch;
     color: var(--muted-on-dark);
     font-size: 0.95rem;
+  }
+
+  .how-intro .button {
+    align-self: flex-start;
+  }
+
+  .how-step img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 416 / 436;
+    object-fit: cover;
+    margin-bottom: 28px;
+  }
+
+  .how-step h3 {
+    margin-bottom: 14px;
+    font-size: clamp(1.25rem, 1.5vw, 1.5rem);
+    font-weight: 500;
+  }
+
+  .how-step p {
+    color: var(--muted-on-dark);
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  @media (max-width: 1100px) {
+    .how-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .how-grid > :nth-child(3) {
+      border-left: 0;
+    }
+
+    .how-grid > :nth-child(n + 3) {
+      border-top: 1px solid var(--line-dark);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .how-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .how-grid > * + * {
+      border-left: 0;
+      border-top: 1px solid var(--line-dark);
+    }
+
+    .how-grid > * {
+      padding: 48px var(--gutter);
+    }
   }
 
   /* D. Library */
