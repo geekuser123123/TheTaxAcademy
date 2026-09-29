@@ -28,7 +28,7 @@ import { libraryScreenshot } from '../data/media';
     />
     <div class="container hero-grid">
       <div class="hero-copy">
-        <h1>Keep Your Self-Directed 401(k) Current.</h1>
+        <h1><span class="h1-line">Keep Your Self-Directed</span> <span class="h1-line">401(k) Current.</span></h1>
         <p>
           Required document updates, ongoing administrative support, and practical education to help you understand and
           maintain your plan.
@@ -76,7 +76,7 @@ import { libraryScreenshot } from '../data/media';
   </section>
 
   <!-- C. How it works -->
-  <section class="section" id="how-it-works">
+  <section class="section how on-dark" id="how-it-works">
     <div class="container">
       <div class="section-heading">
         <div>
@@ -118,7 +118,7 @@ import { libraryScreenshot } from '../data/media';
           Your annual service covers the maintenance described on the renewal page. Individually requested changes and
           additional services are identified separately.
         </p>
-        <a href="/member-benefits/" class="button button-dark">See Member Benefits<Icon name="arrowRight" size={17} /></a>
+        <a href="/member-benefits/" class="button">See Member Benefits<Icon name="arrowRight" size={17} /></a>
       </div>
     </div>
   </section>
@@ -235,7 +235,7 @@ import { libraryScreenshot } from '../data/media';
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(90deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.74) 40%, rgba(0, 29, 33, 0.28) 74%, rgba(0, 29, 33, 0.12) 100%),
+      linear-gradient(90deg, rgba(0, 29, 33, 0.92) 0%, rgba(0, 29, 33, 0.78) 45%, rgba(0, 29, 33, 0.4) 76%, rgba(0, 29, 33, 0.15) 100%),
       linear-gradient(0deg, rgba(0, 29, 33, 0.55) 0%, transparent 40%);
   }
 
@@ -247,13 +247,20 @@ import { libraryScreenshot } from '../data/media';
   }
 
   .hero h1 {
-    max-width: 15ch;
-    font-size: clamp(2.5rem, 5.6vw, 4.6rem);
-    line-height: 1.02;
-    letter-spacing: -0.035em;
+    font-size: clamp(2.6rem, 6.6vw, 6rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
   }
 
-  .hero-copy {
+  /* Two lines on tablet and up; natural wrapping on phones */
+  @media (min-width: 700px) {
+    .h1-line {
+      display: block;
+      white-space: nowrap;
+    }
+  }
+
+  .hero-copy > :not(h1) {
     max-width: 640px;
   }
 
@@ -381,24 +388,36 @@ import { libraryScreenshot } from '../data/media';
     scroll-margin-top: 24px;
   }
 
+  .how {
+    background:
+      radial-gradient(700px 360px at 100% 0%, rgba(31, 154, 75, 0.22), transparent 65%),
+      var(--ink);
+    color: #fff;
+  }
+
   #how-it-works h2 {
     max-width: 24ch;
   }
 
   .how-card {
     position: relative;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line-dark);
+  }
+
+  .how-card p {
+    color: var(--muted-on-dark);
   }
 
   .how-card .icon-box {
     margin-bottom: 20px;
-    background: #fff;
   }
 
   .how-num {
     position: absolute;
     top: 24px;
     right: 28px;
-    color: var(--muted);
+    color: var(--muted-on-dark);
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -415,15 +434,11 @@ import { libraryScreenshot } from '../data/media';
 
   .how-foot p {
     max-width: 62ch;
-    color: var(--muted);
+    color: var(--muted-on-dark);
     font-size: 0.95rem;
   }
 
   /* D. Library */
-  .library {
-    padding-top: 0;
-  }
-
   .library h2 {
     margin-bottom: 20px;
   }
