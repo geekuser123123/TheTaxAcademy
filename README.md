@@ -13,7 +13,8 @@ Website and client portal for The Tax Academy, LLC.
   | Contact | `/contact/` (`?topic=` preselects the reason) |
   | Privacy Policy / Terms of Use | `/privacy-policy/`, `/terms-of-use/` |
 
-- **Public forms** (provider review, contact, renewal): saved to the database, shown to the team in the portal, and optionally emailed to the team.
+- **Online renewal** (`/renewal-page/`): members verify their email, choose a term and services, and pay by card. Payments run through the existing n8n workflow and Square (see "Online renewal" below).
+- **Public forms** (provider review, contact): saved to the database, shown to the team in the portal, and optionally emailed to the team.
 - **Member portal** (`/portal`, the Member Login destination): private documents, messages with the team, and the member's requests.
 - **Team workspace** (`/portal/admin`): add members and send invite links, share and receive documents, reply to messages, and work through form requests.
 
@@ -84,6 +85,29 @@ The first visit to `/portal` opens a one-time **setup** page to create the first
 
 5. **Create the first admin**: visit `https://<your-domain>/portal` and complete the setup page right away.
 
+## Online renewal
+
+The renewal checkout uses the same n8n workflow and Square account as the WordPress renewal page. It sends n8n the same payload fields, so the workflow runs unchanged.
+
+1. The member enters their email. The site calls the n8n **lookup** webhook and shows a masked confirmation (name, last initial, business, phone ending) plus any account fee.
+2. Square's card field (Web Payments SDK) turns the card into a one-time token in the browser. Card details never reach this site.
+3. On **Complete Renewal**, the site looks the account up again, **recalculates the total from `src/data/renewal.ts`**, and posts the payload to the n8n **payment** webhook, which charges the token.
+4. On success the member sees a receipt, the payment appears in the team workspace under Form requests, and the team gets an email if notifications are on. A declined card shows the error from n8n and leaves the form in place.
+
+Set the webhooks as Worker secrets (never in code):
+
+```bash
+npx wrangler secret put RENEWAL_LOOKUP_WEBHOOK_URL
+npx wrangler secret put RENEWAL_PAYMENT_WEBHOOK_URL
+npx wrangler secret put RENEWAL_WEBHOOK_SECRET   # optional, recommended
+```
+
+Until both URLs are set, the page loads normally but verification reports that online renewal is unavailable.
+
+**Recommended once this site is live:** the WordPress page exposed the webhook URLs publicly. Create new webhook paths in n8n, store only the new ones here, and have the payment workflow reject requests whose `x-webhook-secret` header doesn't match `RENEWAL_WEBHOOK_SECRET`. Only this site can then trigger charges, always with server-calculated amounts.
+
+For local testing, point `.dev.vars` at a test n8n workflow (see `.dev.vars.example`). Square's card field works on `localhost`.
+
 ## Optional features
 
 **Email notifications** for new form requests, client messages, and client uploads (via [Resend](https://resend.com)):
@@ -125,8 +149,9 @@ Page copy lives in the page files under `src/pages/`. Shared data lives in `src/
 
 Items marked `TODO(confirm)` in the code need the team's input:
 
-- **Checkout**: this site does not take payments. "Complete Renewal" sends the team an itemized renewal request (term, services, total), and the page says payment instructions will follow. Connect the approved payment flow before launch, including the success, pending, and failed payment states.
-- **Pricing**: confirm every price in `src/data/renewal.ts` against the billing configuration. The old renewal page also showed $255 in some total fields, which needs reconciling.
+- **Renewal webhooks**: set the three `RENEWAL_*` secrets (see "Online renewal"), then do one real low-value test payment end to end.
+- **Account fee**: the existing checkout adds a $45 "Reinstatement Fee" to every renewal that isn't behind (this was the $255 = $200 + $45 on the old page). Confirm the label and when it should apply in `src/data/renewal.ts`.
+- **Pricing**: confirm every price in `src/data/renewal.ts` against the billing configuration.
 - **Form 5500-EZ**: state whether the service includes submission or preparation only.
 - **Termination fee** ($500) and the member-benefits inclusion list: confirm.
 - **Screenshots**: add approved screenshots of the member learning library to `src/data/media.ts`.

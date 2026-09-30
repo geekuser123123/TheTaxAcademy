@@ -32,7 +32,10 @@
     "TEAM_EMAIL": "",
     "MAIL_FROM": ""
   }
-  // Secrets (set with `npx wrangler secret put NAME`), all optional:
-  //   RESEND_API_KEY        enables team email notifications
-  //   TURNSTILE_SECRET_KEY  enables Cloudflare Turnstile on public forms
+  // Secrets (set with `npx wrangler secret put NAME`):
+  //   RENEWAL_LOOKUP_WEBHOOK_URL   required for online renewal: n8n account lookup webhook
+  //   RENEWAL_PAYMENT_WEBHOOK_URL  required for online renewal: n8n payment webhook
+  //   RENEWAL_WEBHOOK_SECRET       optional: sent to n8n as the x-webhook-secret header
+  //   RESEND_API_KEY               optional: team email notifications
+  //   TURNSTILE_SECRET_KEY         optional: Cloudflare Turnstile on public forms
 }

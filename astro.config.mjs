@@ -40,6 +40,7 @@ export default defineConfig({
     '/services/compliance': '/#advanced-help',
     '/privacy': '/privacy-policy/',
     '/service-information': '/terms-of-use/',
+    '/renewal-page/received': '/renewal-page/',
   },
   security: {
     checkOrigin: true,

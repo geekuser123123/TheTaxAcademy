@@ -2,7 +2,6 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { db, newId } from '../../lib/db';
 import { getPublicForm, type Field } from '../../data/forms';
-import { money, renewalServices, renewalTerms, summarize } from '../../data/renewal';
 import { isEmail, str } from '../../lib/format';
 import { notifyTeam } from '../../lib/notify';
 
@@ -68,25 +67,7 @@ export const POST: APIRoute = async ({ request, redirect, clientAddress }) => {
     }
   }
 
-  let successPath = form.successPath;
-  if (form.slug === 'renewal') {
-    const termId = str(data.get('term'), 10);
-    if (!renewalTerms.some((t) => t.id === termId)) return back('term');
-    const serviceIds = data
-      .getAll('services')
-      .map((v) => str(v, 40))
-      .filter((id) => renewalServices.some((s) => s.id === id));
-    // Recompute from the price list; never trust a total sent by the browser.
-    const { term, services, total } = summarize(termId, serviceIds);
-    Object.assign(payload, {
-      'Maintenance term': `${term!.label} — ${money(term!.price)}`,
-      'Additional services': services.length ? services.map((s) => `${s.label} — ${money(s.price)}`).join('\n') : 'None',
-      'Total selected': money(total),
-    });
-    const params = new URLSearchParams({ term: termId });
-    if (serviceIds.length) params.set('services', serviceIds.join(','));
-    successPath = `${form.successPath}?${params}`;
-  }
+  const successPath = form.successPath;
 
   if (!(await verifyTurnstile(str(data.get('cf-turnstile-response'), 4096), clientAddress ?? null))) {
     return back('captcha');

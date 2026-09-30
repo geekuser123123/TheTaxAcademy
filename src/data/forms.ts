@@ -69,26 +69,14 @@ export const forms: PublicForm[] = [
       { name: 'message', label: 'Message', type: 'textarea', required: true },
     ],
   },
-  {
-    // Fields are rendered by the renewal page itself; term and services are validated
-    // against src/data/renewal.ts in the API.
-    slug: 'renewal',
-    title: 'Plan maintenance renewal',
-    successPath: '/renewal-page/received/',
-    anchor: 'checkout',
-    fields: [
-      { name: 'name', label: 'Full name', type: 'text', required: true, autocomplete: 'name' },
-      { name: 'email', label: 'Email address', type: 'email', required: true, autocomplete: 'email' },
-      { name: 'phone', label: 'Phone number', type: 'tel', autocomplete: 'tel' },
-      { name: 'plan_name', label: 'Business or plan name', type: 'text', required: true, autocomplete: 'organization' },
-      { name: 'notes', label: 'Anything we should know?', type: 'textarea' },
-    ],
-  },
 ];
 
 // Titles for forms that earlier versions of the site used, so requests already in the
 // database still display properly in the portal.
 const legacyTitles: Record<string, string> = {
+  // Paid online through /renewal-page/ (see src/pages/api/renewal/pay.ts)
+  renewal: 'Plan maintenance renewal',
+  'termination-payment': 'Plan termination service',
   'document-request': 'Request a document',
   'annual-reporting': 'Annual reporting / Form 5500-EZ',
   'plan-amendment': 'Plan amendment or update',

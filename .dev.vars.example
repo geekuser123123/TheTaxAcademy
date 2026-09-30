@@ -1,2 +1,9 @@
 # Copy to .dev.vars for local development. Never commit .dev.vars.
+#
+# Online renewal (the n8n workflow). Point these at a test workflow when developing:
+# the payment webhook charges real cards in production.
+# RENEWAL_LOOKUP_WEBHOOK_URL=https://your-n8n-host/webhook/<lookup-id>
+# RENEWAL_PAYMENT_WEBHOOK_URL=https://your-n8n-host/webhook/<test-payment-path>
+# RENEWAL_WEBHOOK_SECRET=
+#
 # TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

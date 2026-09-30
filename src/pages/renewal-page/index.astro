@@ -3,15 +3,12 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
 import Faq from '../../components/Faq.astro';
-import FormError from '../../components/FormError.astro';
 import type { IconName } from '../../components/icons';
-import { getPublicForm } from '../../data/forms';
 import { renewalFaqs } from '../../data/faqs';
-import { money, renewalServices, renewalTerms, terminationFee } from '../../data/renewal';
+import { money, renewalServices, renewalTerms, square, terminationFee } from '../../data/renewal';
+import { site } from '../../data/site';
 
-const form = getPublicForm('renewal')!;
 const defaultTerm = renewalTerms[0];
-const turnstileKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
 
 const benefits: { icon: IconName; title: string; text: string }[] = [
   {
@@ -104,9 +101,7 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     </div>
   </section>
 
-  <form method="post" action="/api/submit" id="renewal-form" data-renewal>
-    <input type="hidden" name="form_slug" value={form.slug} />
-
+  <form id="renewal-form" data-renewal novalidate>
     <!-- D. Renewal options -->
     <section class="section" id="renewal-options">
       <div class="container">
@@ -190,51 +185,89 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
         </div>
 
         <div class="checkout" id="checkout">
-          <h2>Complete Your Plan Maintenance Renewal.</h2>
-          <FormError />
+          <h2 data-checkout-title>Complete Your Plan Maintenance Renewal.</h2>
+
+          <div class="mode" role="radiogroup" aria-label="What are you paying for?">
+            <label><input type="radio" name="mode" value="renewal" checked /> Plan maintenance renewal</label>
+            <label><input type="radio" name="mode" value="termination" /> Plan termination service</label>
+          </div>
+          <p class="mode-note" data-termination-note hidden>
+            <Icon name="info" size={15} />
+            This pays for the plan termination service ({money(terminationFee)}). Our team will contact you about the
+            documentation and steps needed to formally terminate your plan. Your plan is not terminated until that process is
+            complete.
+          </p>
+
           <ul class="summary" data-summary aria-live="polite">
             <li><span>{defaultTerm.label}</span><span>{money(defaultTerm.price)}</span></li>
           </ul>
+          <p class="fee-note" data-fee-note>Any account fees are itemized here after you verify your email.</p>
           <div class="summary-total">
             <span>Total</span>
             <strong data-total>{money(defaultTerm.price)}</strong>
           </div>
 
-          <div class="checkout-fields">
-            {
-              form.fields.map((f) => {
-                const id = `renewal-${f.name}`;
-                return (
-                  <div class:list={['field', { full: f.type === 'textarea' }]}>
-                    <label for={id}>
-                      {f.label} {f.required ? <span class="req" aria-hidden="true">*</span> : <span class="optional">(optional)</span>}
-                    </label>
-                    {f.type === 'textarea' ? (
-                      <textarea id={id} name={f.name} maxlength="2000" rows="3" />
-                    ) : f.type === 'select' ? null : (
-                      <input id={id} name={f.name} type={f.type} required={f.required} autocomplete={f.autocomplete} maxlength="500" />
-                    )}
-                  </div>
-                );
-              })
-            }
-            <div class="hp" aria-hidden="true">
-              <label>Leave this empty <input name="website" tabindex="-1" autocomplete="off" /></label>
+          <div class="step">
+            <label for="renewal-email" class="step-label"><span>1</span>Verify your account</label>
+            <div class="verify-row">
+              <input id="renewal-email" type="email" autocomplete="email" class="input" placeholder="Email on your account" />
+              <button type="button" class="button button-dark button-sm" data-verify>Verify</button>
             </div>
-            {turnstileKey && <div class="cf-turnstile full" data-sitekey={turnstileKey} />}
+            <p class="verify-status" data-verify-status aria-live="polite"></p>
+            <div class="account" data-account hidden>
+              <Icon name="check" size={16} />
+              <div><strong data-account-name></strong><span data-account-detail></span></div>
+            </div>
           </div>
 
-          <button class="button checkout-button" type="submit">Complete Renewal<Icon name="arrowRight" size={17} /></button>
-          {/* TODO(confirm): replace with the approved payment flow once checkout is connected. */}
+          <div class="step">
+            <span class="step-label"><span>2</span>Card details</span>
+            <div id="card-container" class="card-container" data-card></div>
+            <p class="pay-error" data-card-error hidden role="alert"></p>
+          </div>
+
+          <div class="alert alert-error" data-pay-error hidden role="alert">
+            <Icon name="circleAlert" size={18} /><span></span>
+          </div>
+          <button class="button checkout-button" type="submit" data-submit>
+            <span data-submit-label>Complete Renewal</span><Icon name="arrowRight" size={17} />
+          </button>
           <p class="checkout-note">
             <Icon name="lockKeyhole" size={15} />
-            No payment is taken on this page. Our team will confirm your account and send secure payment instructions for
-            the total shown.
+            Secure payment processed by Square. Your card details go directly to Square and never touch our servers.
           </p>
+          <noscript>
+            <p class="checkout-note">Online payment needs JavaScript. Please call {site.phone} to renew.</p>
+          </noscript>
         </div>
       </div>
     </section>
   </form>
+
+  <!-- I. Payment confirmation (shown after a successful payment) -->
+  <section class="section confirmation" data-confirmation hidden tabindex="-1">
+    <div class="container">
+      <div class="confirm-card">
+        <span class="confirm-badge"><Icon name="check" size={16} />Payment received</span>
+        <h2 data-confirm-title>Your Renewal Payment Has Been Received.</h2>
+        <p data-confirm-copy>
+          Thank you for renewing with The Tax Academy. Our team will process your renewal and any selected services. We
+          will contact you if additional information, signatures, or documentation are required.
+        </p>
+        <div class="receipt">
+          <h3>Receipt</h3>
+          <ul data-receipt-lines></ul>
+          <div class="receipt-total"><span>Total paid</span><strong data-receipt-total></strong></div>
+          <dl class="receipt-meta">
+            <dt>Date</dt><dd data-receipt-date></dd>
+            <dt data-receipt-ref-label hidden>Payment reference</dt><dd data-receipt-ref hidden></dd>
+          </dl>
+          <a data-receipt-url hidden class="text-link" target="_blank" rel="noopener">View your Square receipt<Icon name="external" size={15} /></a>
+        </div>
+        <a href="/" class="button button-dark">Back to home</a>
+      </div>
+    </div>
+  </section>
 
   <!-- F. Member learning reminder -->
   <section class="container learning">
@@ -267,42 +300,306 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
         </p>
         <p class="closing-fee">Plan termination service: {money(terminationFee)}</p>
       </div>
-      <a href="/contact/?topic=plan-termination" class="button button-dark">
-        Ask About Plan Termination<Icon name="arrowRight" size={17} />
-      </a>
+      <div class="closing-actions">
+        <a href="/contact/?topic=plan-termination" class="button button-dark">
+          Ask About Plan Termination<Icon name="arrowRight" size={17} />
+        </a>
+        <a href="#checkout" class="text-link" data-pay-termination>Pay for the termination service</a>
+      </div>
     </div>
   </section>
 </SiteLayout>
 
-{turnstileKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />}
+<script is:inline src={square.sdkUrl} async data-square-sdk></script>
+
+<div hidden data-renewal-config data-app-id={square.appId} data-location-id={square.locationId}></div>
 
 <script>
-  // Keep the itemized summary and total in step with the selections.
-  // The server recalculates the total from the price list on submit.
-  const form = document.querySelector<HTMLFormElement>('[data-renewal]');
-  const summary = form?.querySelector<HTMLUListElement>('[data-summary]');
-  const totalEl = form?.querySelector<HTMLElement>('[data-total]');
-  const money = (n: number) => `$${n.toLocaleString('en-US')}`;
+  import { computeCheckout, money } from '../../data/renewal';
+
+  type Receipt = {
+    termination: boolean;
+    lines: { label: string; amount: number }[];
+    total: number;
+    date: string;
+    reference: string | null;
+    receiptUrl: string | null;
+  };
+
+  type LookupResponse = {
+    found?: boolean;
+    yearsBehind?: number;
+    account?: { name: string; business: string; phoneLast4: string };
+  };
+  type PayResponse = { success: boolean; error?: string; receipt?: Receipt };
+
+  const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector(sel) as T | null;
+  const form = $<HTMLFormElement>('[data-renewal]')!;
+  const summary = $('[data-summary]')!;
+  const totalEl = $('[data-total]')!;
+  const emailInput = $<HTMLInputElement>('#renewal-email')!;
+  const verifyBtn = $<HTMLButtonElement>('[data-verify]')!;
+  const verifyStatus = $('[data-verify-status]')!;
+  const accountBox = $('[data-account]')!;
+  const payError = $('[data-pay-error]')!;
+  const cardError = $('[data-card-error]')!;
+  const submitBtn = $<HTMLButtonElement>('[data-submit]')!;
+  const submitLabel = $('[data-submit-label]')!;
+  const cfg = $('[data-renewal-config]')!;
+
+  const state = { verifiedEmail: '', yearsBehind: null as number | null };
+
+  const selection = () => {
+    const termination = (form.querySelector('input[name="mode"]:checked') as HTMLInputElement | null)?.value === 'termination';
+    const termId = (form.querySelector('input[name="term"]:checked') as HTMLInputElement | null)?.value ?? '';
+    const serviceIds = [...form.querySelectorAll('input[name="services"]:checked')].map((i) => (i as HTMLInputElement).value);
+    return { termination, termId, serviceIds };
+  };
 
   function render() {
-    if (!form || !summary || !totalEl) return;
-    const picked = [...form.querySelectorAll<HTMLInputElement>('input[name="term"]:checked, input[name="services"]:checked')];
+    const sel = selection();
+    const { lines, total } = computeCheckout({ ...sel, yearsBehind: state.yearsBehind });
     summary.replaceChildren(
-      ...picked.map((input) => {
+      ...lines.map((l) => {
         const li = document.createElement('li');
-        const label = document.createElement('span');
-        const price = document.createElement('span');
-        label.textContent = input.dataset.label!;
-        price.textContent = money(Number(input.dataset.price));
-        li.appendChild(label);
-        li.appendChild(price);
+        const a = document.createElement('span');
+        const b = document.createElement('span');
+        a.textContent = l.label;
+        b.textContent = money(l.amount);
+        li.appendChild(a);
+        li.appendChild(b);
         return li;
       }),
     );
-    totalEl.textContent = money(picked.reduce((sum, input) => sum + Number(input.dataset.price), 0));
+    totalEl.textContent = money(total);
+    $('[data-fee-note]')!.hidden = sel.termination || state.yearsBehind !== null;
+    $('[data-termination-note]')!.hidden = !sel.termination;
+    $('[data-checkout-title]')!.textContent = sel.termination
+      ? 'Pay for the Plan Termination Service.'
+      : 'Complete Your Plan Maintenance Renewal.';
+    submitLabel.textContent = sel.termination ? 'Pay Termination Service' : 'Complete Renewal';
+    // Terms and services don't apply to the termination service.
+    document.querySelectorAll('#renewal-options, .services').forEach((el) => el.classList.toggle('is-disabled', sel.termination));
+    form.querySelectorAll('input[name="term"], input[name="services"]').forEach((i) => ((i as HTMLInputElement).disabled = sel.termination));
   }
 
-  form?.addEventListener('change', render);
+  function showError(el: HTMLElement, message: string) {
+    el.hidden = !message;
+    const span = el.querySelector('span') ?? el;
+    span.textContent = message;
+  }
+
+  // ---- Account verification ----
+  async function verify() {
+    const email = emailInput.value.trim();
+    state.verifiedEmail = '';
+    state.yearsBehind = null;
+    accountBox.hidden = true;
+    render();
+    if (!email) {
+      verifyStatus.textContent = 'Please enter the email on your account.';
+      verifyStatus.className = 'verify-status is-error';
+      return;
+    }
+    verifyStatus.textContent = 'Checking…';
+    verifyStatus.className = 'verify-status';
+    verifyBtn.disabled = true;
+    try {
+      const res = await fetch('/api/renewal/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await res.json()) as LookupResponse;
+      if (res.ok && data.found && data.account) {
+        state.verifiedEmail = email;
+        state.yearsBehind = data.yearsBehind ?? 0;
+        $('[data-account-name]')!.textContent = data.account.name || 'Account verified';
+        $('[data-account-detail]')!.textContent = [
+          data.account.business,
+          data.account.phoneLast4 && `phone ending ${data.account.phoneLast4}`,
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        accountBox.hidden = false;
+        showError(payError, '');
+        verifyStatus.textContent = 'Account verified.';
+        verifyStatus.className = 'verify-status is-ok';
+      } else if (res.ok) {
+        verifyStatus.innerHTML = 'No account found with this email. <a href="/contact/?topic=annual-renewal">Contact our team</a>.';
+        verifyStatus.className = 'verify-status is-error';
+      } else if (res.status === 503) {
+        verifyStatus.textContent = 'Online renewal is temporarily unavailable. Please call us to renew.';
+        verifyStatus.className = 'verify-status is-error';
+      } else {
+        verifyStatus.textContent = res.status === 400 ? 'Please enter a valid email address.' : 'Something went wrong. Please try again.';
+        verifyStatus.className = 'verify-status is-error';
+      }
+    } catch {
+      verifyStatus.textContent = 'Something went wrong. Please try again.';
+      verifyStatus.className = 'verify-status is-error';
+    } finally {
+      verifyBtn.disabled = false;
+      render();
+    }
+  }
+
+  verifyBtn.addEventListener('click', verify);
+  emailInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      verify();
+    }
+  });
+  emailInput.addEventListener('input', () => {
+    if (state.verifiedEmail && emailInput.value.trim() !== state.verifiedEmail) {
+      state.verifiedEmail = '';
+      state.yearsBehind = null;
+      accountBox.hidden = true;
+      verifyStatus.textContent = '';
+      render();
+    }
+  });
+
+  // ---- Square card field ----
+  type SquareCard = { attach(sel: string): Promise<void>; tokenize(): Promise<{ status: string; token?: string; errors?: { message: string }[] }> };
+  let card: SquareCard | null = null;
+
+  async function initSquare() {
+    const Square = (window as unknown as { Square?: { payments(app: string, loc: string): { card(opts?: object): Promise<SquareCard> } } }).Square;
+    if (!Square) return false;
+    try {
+      const payments = Square.payments(cfg.dataset.appId!, cfg.dataset.locationId!);
+      card = await payments.card({
+        style: {
+          input: { color: '#0e1c1f', fontSize: '15px' },
+          'input::placeholder': { color: '#56666a' },
+          '.input-container.is-focus': { borderColor: '#74bf44' },
+          '.input-container.is-error': { borderColor: '#b42318' },
+        },
+      });
+      await card.attach('#card-container');
+      return true;
+    } catch (err) {
+      console.error('Square init error', err);
+      showError(cardError, 'The payment form failed to load. Please refresh the page, or call us to renew.');
+      return false;
+    }
+  }
+
+  // The SDK loads async, so it may finish (or fail) before this script runs: wait for it
+  // briefly, then report a failure instead of leaving an empty card field.
+  const sdkFailed = () => showError(cardError, 'The payment form failed to load. Please refresh the page, or call us to renew.');
+  const hasSquare = () => Boolean((window as unknown as { Square?: unknown }).Square);
+  if (hasSquare()) initSquare();
+  else {
+    const sdk = document.querySelector('[data-square-sdk]');
+    sdk?.addEventListener('load', () => initSquare());
+    sdk?.addEventListener('error', sdkFailed);
+    setTimeout(() => {
+      if (!card && !hasSquare()) sdkFailed();
+    }, 8000);
+  }
+
+  // ---- Payment ----
+  form.addEventListener('change', (e) => {
+    if ((e.target as HTMLInputElement).name !== 'email') render();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showError(payError, '');
+    showError(cardError, '');
+    const sel = selection();
+
+    if (!state.verifiedEmail) {
+      showError(payError, 'Please verify your email before completing your payment.');
+      emailInput.focus();
+      return;
+    }
+    if (!sel.termination && !sel.termId) {
+      showError(payError, 'Please choose a maintenance term.');
+      return;
+    }
+    if (!card) {
+      showError(payError, 'The payment form is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitLabel.textContent = 'Processing…';
+    try {
+      const tokenResult = await card.tokenize();
+      if (tokenResult.status !== 'OK' || !tokenResult.token) {
+        showError(cardError, tokenResult.errors?.map((x) => x.message).join(', ') || 'Card verification failed. Please check your card details.');
+        return;
+      }
+      const res = await fetch('/api/renewal/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: state.verifiedEmail, ...sel, sourceId: tokenResult.token }),
+      });
+      const data = (await res.json()) as PayResponse;
+      if (data.success && data.receipt) showConfirmation(data.receipt);
+      else showError(payError, data.error || 'There was a problem processing your payment. Please try again.');
+    } catch (err) {
+      console.error('payment error', err);
+      showError(
+        payError,
+        'We could not confirm the result of your payment. Please check your email for a receipt before trying again, or call us.',
+      );
+    } finally {
+      submitBtn.disabled = false;
+      render();
+    }
+  });
+
+  // ---- Confirmation ----
+  function showConfirmation(r: Receipt) {
+    const section = $('[data-confirmation]')!;
+    if (r.termination) {
+      $('[data-confirm-title]')!.textContent = 'Your Termination Service Payment Has Been Received.';
+      $('[data-confirm-copy]')!.textContent =
+        'Thank you. Our team will contact you about the documentation and next steps for formally terminating your plan. Your plan is not terminated until that process is complete.';
+    }
+    const list = $('[data-receipt-lines]')!;
+    list.replaceChildren(
+      ...r.lines.map((l) => {
+        const li = document.createElement('li');
+        const a = document.createElement('span');
+        const b = document.createElement('span');
+        a.textContent = l.label;
+        b.textContent = money(l.amount);
+        li.appendChild(a);
+        li.appendChild(b);
+        return li;
+      }),
+    );
+    $('[data-receipt-total]')!.textContent = money(r.total);
+    $('[data-receipt-date]')!.textContent = new Date(r.date).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
+    if (r.reference) {
+      $('[data-receipt-ref]')!.textContent = r.reference;
+      $('[data-receipt-ref]')!.hidden = false;
+      $('[data-receipt-ref-label]')!.hidden = false;
+    }
+    if (r.receiptUrl) {
+      const a = $<HTMLAnchorElement>('[data-receipt-url]')!;
+      a.href = r.receiptUrl;
+      a.hidden = false;
+    }
+    form.hidden = true;
+    section.hidden = false;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    section.focus({ preventScroll: true });
+  }
+
+  // "Pay for the termination service" link switches the checkout mode.
+  document.querySelector('[data-pay-termination]')?.addEventListener('click', () => {
+    const radio = form.querySelector('input[name="mode"][value="termination"]') as HTMLInputElement | null;
+    if (radio) radio.checked = true;
+    render();
+  });
+
   render();
 </script>
 
@@ -591,20 +888,6 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     letter-spacing: -0.02em;
   }
 
-  .checkout-fields {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .checkout-fields .full {
-    grid-column: 1 / -1;
-  }
-
-  .optional {
-    color: var(--muted);
-    font-weight: 400;
-  }
 
   .checkout-button {
     width: 100%;
@@ -622,6 +905,251 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
   .checkout-note :global(.icon) {
     flex: none;
     margin-top: 3px;
+  }
+
+  /* Checkout: mode, verification, card */
+  .mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--cream);
+  }
+
+  .mode label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .mode label:has(input:checked) {
+    background: #fff;
+    box-shadow: var(--shadow);
+  }
+
+  .mode input {
+    accent-color: var(--green);
+  }
+
+  .mode-note,
+  .fee-note {
+    display: flex;
+    gap: 8px;
+    margin: -4px 0 16px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .fee-note {
+    margin: 10px 0 0;
+  }
+
+  .mode-note :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--green);
+  }
+
+  .step {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .step-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .step-label span {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--lime);
+    font-size: 0.75rem;
+  }
+
+  .verify-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .verify-row .input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .verify-row .button {
+    min-height: 46px;
+  }
+
+  .verify-status {
+    min-height: 1em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .verify-status.is-ok {
+    color: var(--green);
+  }
+
+  .verify-status.is-error {
+    color: var(--danger);
+  }
+
+  .account {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--lime-soft);
+    font-size: 0.9rem;
+  }
+
+  .account :global(.icon) {
+    flex: none;
+    margin-top: 3px;
+    color: var(--green);
+  }
+
+  .account strong,
+  .account span {
+    display: block;
+  }
+
+  .account span {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .card-container {
+    min-height: 90px;
+  }
+
+  .pay-error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.85rem;
+  }
+
+  [data-pay-error] {
+    margin-top: 4px;
+  }
+
+  .is-disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* I. Confirmation */
+  .confirmation:focus {
+    outline: none;
+  }
+
+  .confirm-card {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 56px);
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .confirm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--lime-soft);
+    color: #2d6a12;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .confirm-card h2 {
+    margin-bottom: 14px;
+  }
+
+  .confirm-card > p {
+    color: var(--muted);
+  }
+
+  .receipt {
+    margin: 28px 0;
+    padding: 24px;
+    border-radius: var(--radius);
+    background: var(--cream);
+  }
+
+  .receipt h3 {
+    margin-bottom: 12px;
+    font-size: 1rem;
+  }
+
+  .receipt ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0 0 14px;
+    list-style: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .receipt :global(li) {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .receipt-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    font-weight: 600;
+  }
+
+  .receipt-total strong {
+    font-size: 1.4rem;
+  }
+
+  .receipt-meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .receipt-meta dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .closing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
   }
 
   /* F. Learning reminder (compact) */
@@ -699,7 +1227,7 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     }
 
     .benefit-grid,
-    .checkout-fields {
+    .mode {
       grid-template-columns: 1fr;
     }
 
