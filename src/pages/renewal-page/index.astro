@@ -1,16 +1,20 @@
 ---
+import '@fontsource/dm-mono/400.css';
+import '@fontsource/dm-mono/500.css';
 import SiteLayout from '../../layouts/SiteLayout.astro';
-import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
-import Faq from '../../components/Faq.astro';
 import type { IconName } from '../../components/icons';
 import { renewalFaqs } from '../../data/faqs';
 import { money, renewalServices, renewalTerms, square, terminationFee } from '../../data/renewal';
-import { site } from '../../data/site';
+import { experience, site } from '../../data/site';
 
+const oneYear = renewalTerms.find((t) => t.years === 1)!;
+const saving = (years: number, price: number) => years * oneYear.price - price;
+const perYear = (years: number, price: number) =>
+  `$${(price / years).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / year`;
 const defaultTerm = renewalTerms[0];
 
-const benefits: { icon: IconName; title: string; text: string }[] = [
+const included: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'fileCheck',
     title: 'Plan Document Maintenance',
@@ -32,290 +36,463 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     text: 'Continued access to practical, attorney-reviewed educational resources.',
   },
 ];
+
+const whyItems = [
+  'Applicable amendments and restatements must be completed as requirements change.',
+  'Missing required document updates can jeopardize the plan’s tax-qualified status and require corrective work.',
+  'Losing tax-favored treatment can also affect contribution deductions and rollover eligibility.',
+];
 ---
 
 <SiteLayout
   title="Renew Your Plan Maintenance | The Tax Academy"
   description="Annual renewal keeps your Tax Academy document maintenance, required-update service, administrative support, and member learning access active."
 >
-  <!-- A. Introduction -->
-  <PageHero
-    eyebrow="Renew my plan"
-    title="Renew Your Plan Maintenance. Keep Required Updates on Track."
-    lede="Annual renewal is required to continue your Tax Academy document maintenance, required-update service, administrative support, and member learning access."
-  >
-    <p class="lede" style="margin-top:14px">Keep the support behind your plan active as retirement-plan requirements evolve.</p>
-    <a href="#renewal-options" class="button" style="margin-top:32px">
-      Choose My Renewal Term<Icon name="arrowDown" size={17} />
-    </a>
-    <p class="hero-small">Backed by our attorney and our team’s nearly 30 years of retirement-plan experience.</p>
-  </PageHero>
-
-  <!-- B. Why maintenance matters -->
-  <section class="section">
-    <div class="container">
-      <div class="info-panel">
-        <span class="icon-box"><Icon name="info" size={24} stroke={1.6} /></span>
+  <div class="rn">
+    <!-- A. Hero -->
+    <section class="rn-hero">
+      <div class="container rn-hero-inner">
         <div>
-          <h2>Your Plan’s Requirements Continue After Setup.</h2>
-          <div class="info-copy">
-            <p>
-              A retirement plan is not finished when the original documents are signed. Applicable amendments and
-              restatements must be completed as requirements change.
-            </p>
-            <p>
-              Missing required document updates can jeopardize the plan’s tax-qualified status and require corrective work.
-              Losing tax-favored treatment can also affect contribution deductions and rollover eligibility.
-            </p>
-            <p>Keeping your Tax Academy renewal current keeps our maintenance and update service in place.</p>
-          </div>
-          <p class="info-statement">Keep your maintenance current instead of waiting for a document problem to surface.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- C. What renewal includes -->
-  <section class="section includes">
-    <div class="container">
-      <div class="section-heading">
-        <div>
-          <span class="eyebrow">What’s included</span>
-          <h2>What Your Renewal Keeps Active.</h2>
-        </div>
-      </div>
-      <div class="benefit-grid">
-        {
-          benefits.map((b) => (
-            <div class="card card-white">
-              <span class="icon-box">
-                <Icon name={b.icon} size={22} stroke={1.6} />
-              </span>
-              <h3>{b.title}</h3>
-              <p>{b.text}</p>
-            </div>
-          ))
-        }
-      </div>
-      <p class="muted-line">Individual plan changes, filing assistance, and other additional work are listed separately below.</p>
-    </div>
-  </section>
-
-  <form id="renewal-form" data-renewal novalidate>
-    <!-- D. Renewal options -->
-    <section class="section" id="renewal-options">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <span class="eyebrow">Renewal options</span>
-            <h2>Select Your Maintenance Term.</h2>
-          </div>
-          <p>
-            Keep your annual maintenance active for one, two, or three years. Multi-year options prepay the selected
-            maintenance period.
+          <div class="rn-eyebrow">Plan maintenance renewal</div>
+          <h1>Renew Your Plan Maintenance. <em>Keep Required Updates on Track.</em></h1>
+          <p class="rn-hero-sub">
+            Annual renewal is required to continue your Tax Academy document maintenance, required-update service,
+            administrative support, and member learning access.
           </p>
+          <p class="rn-hero-sub">Keep the support behind your plan active as retirement-plan requirements evolve.</p>
+          <div class="rn-hero-ctas">
+            <a href="#renewal-options" class="rn-btn rn-btn-lg">Choose My Renewal Term</a>
+            <a href="#closing" class="rn-link-quiet">Closing your plan instead?</a>
+          </div>
+          <div class="rn-trust">
+            <span class="rn-trust-item"><span class="rn-trust-check"><Icon name="check" size={10} stroke={3} /></span>{experience}</span>
+            <span class="rn-trust-item"><span class="rn-trust-check"><Icon name="check" size={10} stroke={3} /></span>Secure card payment by Square</span>
+          </div>
         </div>
-        <fieldset class="terms">
-          <legend class="sr-only">Maintenance term</legend>
+        <div class="rn-hero-card">
+          <div class="rn-card-label">Included with renewal</div>
+          <div class="rn-hero-card-title">What Your Renewal Keeps Active</div>
           {
-            renewalTerms.map((t) => (
-              <label class="term">
-                <input
-                  type="radio"
-                  name="term"
-                  value={t.id}
-                  checked={t.id === defaultTerm.id}
-                  required
-                  data-label={t.label}
-                  data-price={t.price}
-                />
-                {t.badge && <span class="term-badge">{t.badge}</span>}
-                <span class="term-years">
-                  {t.years} {t.years === 1 ? 'year' : 'years'}
-                </span>
-                <span class="term-price">{money(t.price)}</span>
-                <span class="term-label">{t.label}</span>
-                {t.saving && <span class="term-saving">{t.saving}</span>}
-                <span class="term-check" aria-hidden="true">
-                  <Icon name="check" size={16} />
-                </span>
-              </label>
+            included.map((i) => (
+              <div class="rn-hero-feature">
+                <span class="rn-dot" />
+                {i.title}
+              </div>
             ))
           }
-        </fieldset>
+          <div class="rn-pill">Included with every active maintenance term</div>
+        </div>
       </div>
     </section>
 
-    <!-- E. Additional services + checkout -->
-    <section class="section checkout-section">
-      <div class="container checkout-grid">
-        <div>
-          <span class="eyebrow">Additional services</span>
-          <h2>Has Something Changed With Your Plan?</h2>
-          <p class="lede" style="margin-top:16px">
-            Changes to your business, trustees, or plan details may require additional paperwork. Select the services you
-            need, or ask our team for help identifying the appropriate service.
-          </p>
-          <a href="/contact/?topic=renewal-help" class="text-link" style="margin-top:16px">
-            Help Me Identify the Right Service<Icon name="arrowRight" size={16} />
-          </a>
-          <fieldset class="services">
-            <legend class="sr-only">Additional services (optional)</legend>
-            {
-              renewalServices.map((s) => (
-                <div class="service">
-                  <label class="service-main">
-                    <input type="checkbox" name="services" value={s.id} data-label={s.label} data-price={s.price} />
-                    <span class="service-text">
-                      <strong>{s.label}</strong>
-                      <span>{s.description}</span>
+    <!-- C. What renewal includes + F. learning reminder -->
+    <section class="rn-section rn-white">
+      <div class="container">
+        <div class="rn-label">What you get</div>
+        <div class="rn-included-grid">
+          <div>
+            <h2 class="rn-title">What Your Renewal Keeps Active.</h2>
+            <p class="rn-sub" style="margin-bottom:32px">
+              Individual plan changes, filing assistance, and other additional work are listed separately below.
+            </p>
+            <div class="rn-included-list">
+              {
+                included.map((i) => (
+                  <div class="rn-included-item">
+                    <span class="rn-included-icon">
+                      <Icon name={i.icon} size={17} stroke={1.8} />
                     </span>
-                    <span class="service-price">{money(s.price)}</span>
-                  </label>
-                  {s.info && (
-                    <p class="service-info">
-                      <Icon name="info" size={15} />
-                      {s.info}
-                    </p>
-                  )}
-                </div>
-              ))
-            }
-          </fieldset>
-        </div>
-
-        <div class="checkout" id="checkout">
-          <h2 data-checkout-title>Complete Your Plan Maintenance Renewal.</h2>
-
-          <div class="mode" role="radiogroup" aria-label="What are you paying for?">
-            <label><input type="radio" name="mode" value="renewal" checked /> Plan maintenance renewal</label>
-            <label><input type="radio" name="mode" value="termination" /> Plan termination service</label>
-          </div>
-          <p class="mode-note" data-termination-note hidden>
-            <Icon name="info" size={15} />
-            This pays for the plan termination service ({money(terminationFee)}). Our team will contact you about the
-            documentation and steps needed to formally terminate your plan. Your plan is not terminated until that process is
-            complete.
-          </p>
-
-          <ul class="summary" data-summary aria-live="polite">
-            <li><span>{defaultTerm.label}</span><span>{money(defaultTerm.price)}</span></li>
-          </ul>
-          <p class="fee-note" data-fee-note>Any account fees are itemized here after you verify your email.</p>
-          <div class="summary-total">
-            <span>Total</span>
-            <strong data-total>{money(defaultTerm.price)}</strong>
-          </div>
-
-          <div class="step">
-            <label for="renewal-email" class="step-label"><span>1</span>Verify your account</label>
-            <div class="verify-row">
-              <input id="renewal-email" type="email" autocomplete="email" class="input" placeholder="Email on your account" />
-              <button type="button" class="button button-dark button-sm" data-verify>Verify</button>
-            </div>
-            <p class="verify-status" data-verify-status aria-live="polite"></p>
-            <div class="account" data-account hidden>
-              <Icon name="check" size={16} />
-              <div><strong data-account-name></strong><span data-account-detail></span></div>
+                    <div>
+                      <strong>{i.title}</strong>
+                      <span>{i.text}</span>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
           </div>
-
-          <div class="step">
-            <span class="step-label"><span>2</span>Card details</span>
-            <div id="card-container" class="card-container" data-card></div>
-            <p class="pay-error" data-card-error hidden role="alert"></p>
+          <div class="rn-course-card">
+            <div class="rn-card-label rn-green">Member learning</div>
+            <h3>Your Renewal Keeps Practical Learning Within Reach.</h3>
+            <p>
+              Continue access to attorney-reviewed explanations of common plan questions, paperwork, and annual
+              responsibilities. Our learning library puts practical experience in one organized place, so you are not
+              left piecing together answers on your own.
+            </p>
+            <div class="rn-course-features">
+              <div>Common plan questions, explained</div>
+              <div>Paperwork and annual responsibilities</div>
+              <div>Practical, attorney-reviewed resources</div>
+            </div>
+            <a href="/member-benefits/" class="rn-pill rn-pill-link">See Member Benefits <Icon name="arrowRight" size={13} /></a>
           </div>
-
-          <div class="alert alert-error" data-pay-error hidden role="alert">
-            <Icon name="circleAlert" size={18} /><span></span>
-          </div>
-          <button class="button checkout-button" type="submit" data-submit>
-            <span data-submit-label>Complete Renewal</span><Icon name="arrowRight" size={17} />
-          </button>
-          <p class="checkout-note">
-            <Icon name="lockKeyhole" size={15} />
-            Secure payment processed by Square. Your card details go directly to Square and never touch our servers.
-          </p>
-          <noscript>
-            <p class="checkout-note">Online payment needs JavaScript. Please call {site.phone} to renew.</p>
-          </noscript>
         </div>
       </div>
     </section>
-  </form>
 
-  <!-- I. Payment confirmation (shown after a successful payment) -->
-  <section class="section confirmation" data-confirmation hidden tabindex="-1">
-    <div class="container">
-      <div class="confirm-card">
-        <span class="confirm-badge"><Icon name="check" size={16} />Payment received</span>
-        <h2 data-confirm-title>Your Renewal Payment Has Been Received.</h2>
-        <p data-confirm-copy>
-          Thank you for renewing with The Tax Academy. Our team will process your renewal and any selected services. We
-          will contact you if additional information, signatures, or documentation are required.
+    <!-- Statement strip -->
+    <div class="rn-strip">
+      <p>Keep your maintenance current <strong>instead of waiting for a document problem to surface.</strong></p>
+    </div>
+
+    <!-- D. Renewal options -->
+    <section class="rn-section rn-white" id="renewal-options">
+      <div class="container">
+        <div class="rn-label">Choose your term</div>
+        <h2 class="rn-title">Select Your Maintenance Term.</h2>
+        <p class="rn-sub">
+          Keep your annual maintenance active for one, two, or three years. Multi-year options prepay the selected
+          maintenance period.
         </p>
-        <div class="receipt">
-          <h3>Receipt</h3>
-          <ul data-receipt-lines></ul>
-          <div class="receipt-total"><span>Total paid</span><strong data-receipt-total></strong></div>
-          <dl class="receipt-meta">
-            <dt>Date</dt><dd data-receipt-date></dd>
-            <dt data-receipt-ref-label hidden>Payment reference</dt><dd data-receipt-ref hidden></dd>
-          </dl>
-          <a data-receipt-url hidden class="text-link" target="_blank" rel="noopener">View your Square receipt<Icon name="external" size={15} /></a>
+        <div class="rn-pricing-grid" role="radiogroup" aria-label="Maintenance term">
+          {
+            renewalTerms.map((t) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={t.id === defaultTerm.id ? 'true' : 'false'}
+                class:list={['rn-price-card', { 'is-featured': t.badge, 'is-selected': t.id === defaultTerm.id }]}
+                data-term={t.id}
+              >
+                {t.badge && <span class="rn-price-badge">{t.badge}</span>}
+                <span class="rn-radio" />
+                <span class="rn-price-term">
+                  {t.years} {t.years === 1 ? 'Year' : 'Years'}
+                </span>
+                <span class="rn-price-amount">{money(t.price)}</span>
+                <span class="rn-price-save">{saving(t.years, t.price) > 0 ? `Save ${money(saving(t.years, t.price))}` : ' '}</span>
+                <span class="rn-price-hint">{t.years === 1 ? 'Standard annual term' : perYear(t.years, t.price)}</span>
+              </button>
+            ))
+          }
         </div>
-        <a href="/" class="button button-dark">Back to home</a>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- F. Member learning reminder -->
-  <section class="container learning">
-    <div class="learning-row">
-      <span class="icon-box"><Icon name="library" size={22} stroke={1.6} /></span>
-      <div>
-        <h2>Your Renewal Keeps Practical Learning Within Reach.</h2>
-        <p>
-          Continue access to attorney-reviewed explanations of common plan questions, paperwork, and annual
-          responsibilities. Our learning library puts practical experience in one organized place, so you are not left
-          piecing together answers on your own.
+    <!-- E. Additional services -->
+    <section class="rn-section rn-pale" id="additional-services">
+      <div class="container">
+        <div class="rn-label">Additional services</div>
+        <h2 class="rn-title">Has Something Changed With Your Plan?</h2>
+        <p class="rn-sub">
+          Changes to your business, trustees, or plan details may require additional paperwork. Select the services you
+          need, or ask our team for help identifying the appropriate service.
         </p>
+        <div class="rn-addons-grid">
+          {
+            renewalServices.map((s) => (
+              <div class="rn-addon-wrap">
+                <button type="button" role="checkbox" aria-checked="false" class="rn-addon" data-service={s.id}>
+                  <span class="rn-check" />
+                  <span class="rn-addon-name">{s.label}</span>
+                  <span class="rn-addon-price">{money(s.price)}</span>
+                  <span class="rn-addon-desc">{s.description}</span>
+                </button>
+                {s.info && (
+                  <span class="rn-tip" tabindex="0" aria-label={`About ${s.label}`}>
+                    ?<span class="rn-tip-text" role="tooltip">{s.info}</span>
+                  </span>
+                )}
+              </div>
+            ))
+          }
+        </div>
+        <div class="rn-hint">
+          Not sure which service applies?{' '}
+          <a href="/contact/?topic=renewal-help">Help Me Identify the Right Service →</a>
+        </div>
       </div>
-      <a href="/member-benefits/" class="text-link">See Member Benefits<Icon name="arrowRight" size={16} /></a>
-    </div>
-  </section>
+    </section>
 
-  <!-- G. Renewal questions -->
-  <Faq items={renewalFaqs} title="Renewal Questions" />
+    <!-- B. Why maintenance matters -->
+    <section class="rn-why">
+      <div class="container rn-why-grid">
+        <div>
+          <div class="rn-label rn-label-dim">Why it matters</div>
+          <h2 class="rn-why-title">Your Plan’s Requirements Continue After Setup.</h2>
+          <p class="rn-why-sub">A retirement plan is not finished when the original documents are signed.</p>
+        </div>
+        <ul class="rn-why-list">
+          {
+            whyItems.map((t) => (
+              <li>
+                <span class="rn-why-icon">
+                  <Icon name="info" size={15} stroke={2} />
+                </span>
+                <p>{t}</p>
+              </li>
+            ))
+          }
+          <li class="rn-why-statement">
+            <span class="rn-why-icon is-green">
+              <Icon name="check" size={15} stroke={2.4} />
+            </span>
+            <p>Keeping your Tax Academy renewal current keeps our maintenance and update service in place.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
 
-  <!-- H. Closing a plan -->
-  <section class="section closing">
-    <div class="container closing-row">
-      <div>
-        <span class="eyebrow">Closing a plan</span>
-        <h2>Closing Your Plan? Complete the Proper Process.</h2>
-        <p class="lede" style="margin-top:14px">
+    <!-- H. Closing a plan -->
+    <section class="rn-section rn-pale" id="closing">
+      <div class="container">
+        <div class="rn-label">Closing a plan</div>
+        <h2 class="rn-title">Closing Your Plan? Complete the Proper Process.</h2>
+        <p class="rn-sub">
           Contact our team about the documentation and next steps for formally terminating your plan. Required document
           updates may still need to be completed before termination.
         </p>
-        <p class="closing-fee">Plan termination service: {money(terminationFee)}</p>
+        <button type="button" class="rn-cancel-card" aria-pressed="false" data-termination-card>
+          <span class="rn-cancel-head">
+            <span class="rn-cancel-left">
+              <span class="rn-check rn-check-red" />
+              <span>
+                <span class="rn-cancel-title">Plan Termination Service</span>
+                <span class="rn-cancel-sub">
+                  Our team will contact you about the documentation and steps needed to formally terminate your plan. Your
+                  plan is not terminated until that process is complete.
+                </span>
+              </span>
+            </span>
+            <span class="rn-cancel-price">{money(terminationFee)}</span>
+          </span>
+        </button>
+        <p class="rn-cancel-note">
+          <Icon name="info" size={15} />
+          <span>
+            Cancelling your maintenance service is not the same as terminating your plan. Terminating a plan requires its
+            own documentation and steps. Selecting this service pays for termination instead of a renewal.
+          </span>
+        </p>
+        <a href="/contact/?topic=plan-termination" class="rn-text-link">Ask About Plan Termination →</a>
       </div>
-      <div class="closing-actions">
-        <a href="/contact/?topic=plan-termination" class="button button-dark">
-          Ask About Plan Termination<Icon name="arrowRight" size={17} />
-        </a>
-        <a href="#checkout" class="text-link" data-pay-termination>Pay for the termination service</a>
+    </section>
+
+    <!-- G. Renewal questions -->
+    <section class="rn-section rn-white">
+      <div class="container">
+        <div class="rn-label">Common questions</div>
+        <h2 class="rn-title">Renewal Questions</h2>
+        <div class="rn-faq">
+          {
+            renewalFaqs.map((f) => (
+              <details>
+                <summary>
+                  {f.q}
+                  <span class="rn-faq-icon">+</span>
+                </summary>
+                <div class="rn-faq-answer">
+                  {f.a.map((p) => (
+                    <p>{p}</p>
+                  ))}
+                </div>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="rn-final">
+      <div class="container">
+        <h2>Keep Required Updates on Track.</h2>
+        <p>
+          Renew to continue document maintenance, required updates, administrative support, and member learning access.
+        </p>
+        <button type="button" class="rn-btn rn-btn-xl" data-open-checkout>Complete My Renewal</button>
+        <div class="rn-final-sub">Secure card payment by Square · Itemized total before you pay</div>
+        <noscript><p class="rn-final-sub">Online payment needs JavaScript. Please call {site.phone} to renew.</p></noscript>
+      </div>
+    </section>
+
+    <!-- Sticky selection bar -->
+    <div class="rn-sticky" data-sticky aria-hidden="true">
+      <div class="rn-sticky-summary">
+        <div class="rn-sticky-label">Your current selection</div>
+        <div class="rn-sticky-total"><span data-sticky-total>{money(defaultTerm.price)}</span><small data-sticky-note> + account fee, if any</small></div>
+      </div>
+      <div class="rn-sticky-right">
+        <div class="rn-sticky-selection" data-sticky-selection>{defaultTerm.label}</div>
+        <button type="button" class="rn-btn" data-open-checkout tabindex="-1">Continue to Checkout →</button>
       </div>
     </div>
-  </section>
+
+    <!-- Checkout modal -->
+    <div class="rn-modal-overlay" data-modal hidden>
+      <div class="rn-modal" role="dialog" aria-modal="true" aria-labelledby="rn-modal-title">
+        <div class="rn-modal-header">
+          <div>
+            <h2 class="rn-modal-title" id="rn-modal-title" data-modal-title>Complete Your Plan Maintenance Renewal</h2>
+            <p class="rn-modal-sub">Verify your account, review your itemized total, and pay securely by card.</p>
+          </div>
+          <button type="button" class="rn-modal-close" data-close-checkout aria-label="Close checkout">
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+        <div class="rn-modal-body">
+          <div class="rn-modal-left">
+            <div class="rn-msec" data-renewal-only>
+              <div class="rn-msec-label">Maintenance term</div>
+              <div class="rn-mlist" role="radiogroup" aria-label="Maintenance term">
+                {
+                  renewalTerms.map((t) => (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={t.id === defaultTerm.id ? 'true' : 'false'}
+                      class:list={['rn-mopt', { 'is-selected': t.id === defaultTerm.id }]}
+                      data-term={t.id}
+                    >
+                      <span class="rn-radio" />
+                      <span class="rn-mopt-info">
+                        <span class="rn-mopt-name">
+                          {t.years} {t.years === 1 ? 'Year' : 'Years'}
+                          {t.badge && ` — ${t.badge}`}
+                        </span>
+                        {saving(t.years, t.price) > 0 && <span class="rn-mopt-save">Save {money(saving(t.years, t.price))}</span>}
+                      </span>
+                      <span class="rn-mopt-price">{money(t.price)}</span>
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+
+            <div class="rn-msec" data-renewal-only>
+              <div class="rn-msec-label">Additional services (optional)</div>
+              <div class="rn-mlist">
+                {
+                  renewalServices.map((s) => (
+                    <button type="button" role="checkbox" aria-checked="false" class="rn-mopt" data-service={s.id}>
+                      <span class="rn-check" />
+                      <span class="rn-mopt-info">
+                        <span class="rn-mopt-name">{s.label}</span>
+                        <span class="rn-mopt-desc">{s.description}</span>
+                      </span>
+                      <span class="rn-mopt-price">{money(s.price)}</span>
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+
+            <div class="rn-msec">
+              <div class="rn-msec-label">Closing your plan instead?</div>
+              <button type="button" class="rn-mopt rn-mopt-red" aria-pressed="false" data-termination-card>
+                <span class="rn-check rn-check-red" />
+                <span class="rn-mopt-info">
+                  <span class="rn-mopt-name">Plan Termination Service</span>
+                  <span class="rn-mopt-desc">Paid on its own, instead of a renewal.</span>
+                </span>
+                <span class="rn-mopt-price">{money(terminationFee)}</span>
+              </button>
+              <p class="rn-mnote" data-termination-note hidden>
+                Our team will contact you about the documentation and steps needed to formally terminate your plan. Your
+                plan is not terminated until that process is complete.
+              </p>
+            </div>
+
+            <div class="rn-msec">
+              <div class="rn-msec-label">Your information</div>
+              <label class="rn-mform-label" for="rn-email">Email on your account</label>
+              <div class="rn-verify-row">
+                <input id="rn-email" class="rn-input" type="email" autocomplete="email" placeholder="you@example.com" />
+                <button type="button" class="rn-btn rn-btn-sm" data-verify>Verify</button>
+              </div>
+              <p class="rn-verify-status" data-verify-status aria-live="polite"></p>
+              <div class="rn-account" data-account hidden>
+                <span class="rn-trust-check"><Icon name="check" size={10} stroke={3} /></span>
+                <div><strong data-account-name></strong><span data-account-detail></span></div>
+              </div>
+            </div>
+
+            <div class="rn-msec">
+              <div class="rn-msec-label">Payment</div>
+              <div class="rn-card-icons" aria-hidden="true">
+                <span>VISA</span><span>MC</span><span>AMEX</span><span>DISC</span>
+              </div>
+              <label class="rn-mform-label">Card details</label>
+              <div id="card-container" class="rn-card-container"></div>
+              <p class="rn-error" data-card-error hidden role="alert"></p>
+            </div>
+
+            <div>
+              <p class="rn-error" data-pay-error hidden role="alert"></p>
+              <button type="button" class="rn-submit" data-submit>
+                <span data-submit-label>Complete Renewal</span>
+              </button>
+              <div class="rn-submit-sub">
+                <Icon name="lockKeyhole" size={13} /> Secure payment · Powered by Square. Card details go directly to Square.
+              </div>
+            </div>
+          </div>
+
+          <aside class="rn-modal-right" aria-label="Order summary">
+            <div class="rn-order-title">Your Order</div>
+            <div data-order-lines aria-live="polite"></div>
+            <p class="rn-fee-note" data-fee-note>Any account fee is itemized here after you verify your email.</p>
+            <div class="rn-order-total">
+              <span>Total</span>
+              <strong data-order-total>{money(defaultTerm.price)}</strong>
+            </div>
+            <div class="rn-order-box rn-order-box-green" data-renewal-only>
+              <div class="rn-order-box-label">Included with renewal</div>
+              <div>Member learning access</div>
+              <small>Continues throughout your active maintenance term.</small>
+            </div>
+            <div class="rn-order-box">
+              <div class="rn-order-box-label">What happens next</div>
+              <ol class="rn-next" data-next-steps>
+                <li>We process your renewal and any selected services.</li>
+                <li>We contact you if information, signatures, or documentation are needed.</li>
+              </ol>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+
+    <!-- I. Confirmation -->
+    <div class="rn-confirm" data-confirmation hidden tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="rn-confirm-title">
+      <div class="rn-confirm-nav">
+        <img src="/images/tax-academy-logo.png" alt="" width="42" height="42" />
+        <span>{site.legalName}</span>
+      </div>
+      <div class="rn-confirm-body">
+        <span class="rn-confirm-badge"><span class="rn-confirm-check"><Icon name="check" size={12} stroke={3} /></span>Payment received</span>
+        <h2 class="rn-confirm-title" id="rn-confirm-title" data-confirm-title>Your Renewal Payment Has Been Received.</h2>
+        <p class="rn-confirm-sub" data-confirm-copy>
+          Thank you for renewing with The Tax Academy. Our team will process your renewal and any selected services. We
+          will contact you if additional information, signatures, or documentation are required.
+        </p>
+        <div class="rn-confirm-card">
+          <div class="rn-confirm-card-title">Order summary</div>
+          <div data-receipt-lines></div>
+          <div class="rn-confirm-total"><span>Total paid</span><strong data-receipt-total></strong></div>
+          <dl class="rn-confirm-meta">
+            <dt>Date</dt><dd data-receipt-date></dd>
+            <dt data-receipt-ref-label hidden>Payment reference</dt><dd data-receipt-ref hidden></dd>
+          </dl>
+          <a data-receipt-url hidden class="rn-text-link" target="_blank" rel="noopener">View your Square receipt →</a>
+        </div>
+        <div class="rn-confirm-next">
+          <div class="rn-confirm-next-title">What happens next</div>
+          <ol data-confirm-steps>
+            <li>We process your renewal and any selected services.</li>
+            <li>We contact you if information, signatures, or documentation are needed.</li>
+          </ol>
+        </div>
+        <a href="/" class="rn-btn rn-btn-lg">Back to home</a>
+      </div>
+    </div>
+
+    <div hidden data-renewal-config data-app-id={square.appId} data-location-id={square.locationId} data-sdk={square.sdkUrl}></div>
+  </div>
 </SiteLayout>
 
-<script is:inline src={square.sdkUrl} async data-square-sdk></script>
-
-<div hidden data-renewal-config data-app-id={square.appId} data-location-id={square.locationId}></div>
-
 <script>
-  import { computeCheckout, money } from '../../data/renewal';
+  import { computeCheckout, money, renewalTerms } from '../../data/renewal';
 
   type Receipt = {
     termination: boolean;
@@ -325,19 +502,25 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     reference: string | null;
     receiptUrl: string | null;
   };
-
   type LookupResponse = {
     found?: boolean;
     yearsBehind?: number;
     account?: { name: string; business: string; phoneLast4: string };
   };
   type PayResponse = { success: boolean; error?: string; receipt?: Receipt };
+  type SquareCard = {
+    attach(sel: string): Promise<void>;
+    tokenize(): Promise<{ status: string; token?: string; errors?: { message: string }[] }>;
+  };
+  type SquareGlobal = { payments(app: string, loc: string): { card(opts?: object): Promise<SquareCard> } };
 
   const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector(sel) as T | null;
-  const form = $<HTMLFormElement>('[data-renewal]')!;
-  const summary = $('[data-summary]')!;
-  const totalEl = $('[data-total]')!;
-  const emailInput = $<HTMLInputElement>('#renewal-email')!;
+  const $$ = (sel: string) => [...document.querySelectorAll(sel)] as HTMLElement[];
+
+  const cfg = $('[data-renewal-config]')!;
+  const modal = $('[data-modal]')!;
+  const sticky = $('[data-sticky]')!;
+  const emailInput = $<HTMLInputElement>('#rn-email')!;
   const verifyBtn = $<HTMLButtonElement>('[data-verify]')!;
   const verifyStatus = $('[data-verify-status]')!;
   const accountBox = $('[data-account]')!;
@@ -345,49 +528,159 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
   const cardError = $('[data-card-error]')!;
   const submitBtn = $<HTMLButtonElement>('[data-submit]')!;
   const submitLabel = $('[data-submit-label]')!;
-  const cfg = $('[data-renewal-config]')!;
 
-  const state = { verifiedEmail: '', yearsBehind: null as number | null };
-
-  const selection = () => {
-    const termination = (form.querySelector('input[name="mode"]:checked') as HTMLInputElement | null)?.value === 'termination';
-    const termId = (form.querySelector('input[name="term"]:checked') as HTMLInputElement | null)?.value ?? '';
-    const serviceIds = [...form.querySelectorAll('input[name="services"]:checked')].map((i) => (i as HTMLInputElement).value);
-    return { termination, termId, serviceIds };
+  const state = {
+    termId: renewalTerms[0].id,
+    services: new Set<string>(),
+    termination: false,
+    verifiedEmail: '',
+    yearsBehind: null as number | null,
   };
 
+  const renewalSteps = [
+    'We process your renewal and any selected services.',
+    'We contact you if information, signatures, or documentation are needed.',
+  ];
+  const terminationSteps = [
+    'Our team contacts you about the documentation and steps needed to formally terminate your plan.',
+    'Your plan is not terminated until that process is complete.',
+  ];
+
+  function lineRows(lines: { label: string; amount: number }[], cls: string) {
+    return lines.map((l) => {
+      const row = document.createElement('div');
+      row.className = cls;
+      const a = document.createElement('span');
+      const b = document.createElement('span');
+      a.textContent = l.label;
+      b.textContent = money(l.amount);
+      row.appendChild(a);
+      row.appendChild(b);
+      return row;
+    });
+  }
+
+  function listItems(steps: string[]) {
+    return steps.map((s) => {
+      const li = document.createElement('li');
+      li.textContent = s;
+      return li;
+    });
+  }
+
   function render() {
-    const sel = selection();
-    const { lines, total } = computeCheckout({ ...sel, yearsBehind: state.yearsBehind });
-    summary.replaceChildren(
-      ...lines.map((l) => {
-        const li = document.createElement('li');
-        const a = document.createElement('span');
-        const b = document.createElement('span');
-        a.textContent = l.label;
-        b.textContent = money(l.amount);
-        li.appendChild(a);
-        li.appendChild(b);
-        return li;
-      }),
-    );
-    totalEl.textContent = money(total);
-    $('[data-fee-note]')!.hidden = sel.termination || state.yearsBehind !== null;
-    $('[data-termination-note]')!.hidden = !sel.termination;
-    $('[data-checkout-title]')!.textContent = sel.termination
-      ? 'Pay for the Plan Termination Service.'
-      : 'Complete Your Plan Maintenance Renewal.';
-    submitLabel.textContent = sel.termination ? 'Pay Termination Service' : 'Complete Renewal';
-    // Terms and services don't apply to the termination service.
-    document.querySelectorAll('#renewal-options, .services').forEach((el) => el.classList.toggle('is-disabled', sel.termination));
-    form.querySelectorAll('input[name="term"], input[name="services"]').forEach((i) => ((i as HTMLInputElement).disabled = sel.termination));
+    const { lines, total } = computeCheckout({
+      termId: state.termId,
+      serviceIds: [...state.services],
+      termination: state.termination,
+      yearsBehind: state.yearsBehind,
+    });
+
+    $$('[data-term]').forEach((el) => {
+      const on = el.dataset.term === state.termId;
+      el.classList.toggle('is-selected', on);
+      el.setAttribute('aria-checked', String(on));
+      el.classList.toggle('is-disabled', state.termination);
+      (el as HTMLButtonElement).disabled = state.termination;
+    });
+    $$('[data-service]').forEach((el) => {
+      const on = state.services.has(el.dataset.service!);
+      el.classList.toggle('is-selected', on);
+      el.setAttribute('aria-checked', String(on));
+      el.classList.toggle('is-disabled', state.termination);
+      (el as HTMLButtonElement).disabled = state.termination;
+    });
+    $$('[data-termination-card]').forEach((el) => {
+      el.classList.toggle('is-selected', state.termination);
+      el.setAttribute('aria-pressed', String(state.termination));
+    });
+    $$('[data-renewal-only]').forEach((el) => (el.hidden = state.termination));
+    $('[data-termination-note]')!.hidden = !state.termination;
+
+    $('[data-order-lines]')!.replaceChildren(...lineRows(lines, 'rn-order-line'));
+    $('[data-order-total]')!.textContent = money(total);
+    $('[data-fee-note]')!.hidden = state.termination || state.yearsBehind !== null;
+    $('[data-next-steps]')!.replaceChildren(...listItems(state.termination ? terminationSteps : renewalSteps));
+    $('[data-modal-title]')!.textContent = state.termination
+      ? 'Pay for the Plan Termination Service'
+      : 'Complete Your Plan Maintenance Renewal';
+    if (!submitBtn.disabled) {
+      submitLabel.textContent = state.termination ? `Pay Termination Service — ${money(total)}` : `Complete Renewal — ${money(total)}`;
+    }
+
+    $('[data-sticky-total]')!.textContent = money(total);
+    $('[data-sticky-note]')!.hidden = state.termination || state.yearsBehind !== null;
+    const term = renewalTerms.find((t) => t.id === state.termId);
+    $('[data-sticky-selection]')!.textContent = state.termination
+      ? 'Plan Termination Service'
+      : [term?.label, state.services.size ? `+ ${state.services.size} service${state.services.size > 1 ? 's' : ''}` : '']
+          .filter(Boolean)
+          .join(' ');
   }
 
   function showError(el: HTMLElement, message: string) {
     el.hidden = !message;
-    const span = el.querySelector('span') ?? el;
-    span.textContent = message;
+    el.textContent = message;
   }
+
+  // ---- Selection (page cards and checkout options share one state) ----
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const term = target.closest<HTMLElement>('[data-term]');
+    const service = target.closest<HTMLElement>('[data-service]');
+    const termination = target.closest<HTMLElement>('[data-termination-card]');
+    if (term && !state.termination) state.termId = term.dataset.term!;
+    else if (service && !state.termination) {
+      const id = service.dataset.service!;
+      if (state.services.has(id)) state.services.delete(id);
+      else state.services.add(id);
+    } else if (termination) state.termination = !state.termination;
+    else return;
+    render();
+  });
+
+  // ---- Checkout modal ----
+  let lastFocus: HTMLElement | null = null;
+  let squareStarted = false;
+
+  function openCheckout() {
+    lastFocus = document.activeElement as HTMLElement | null;
+    modal.hidden = false;
+    document.body.classList.add('rn-locked');
+    requestAnimationFrame(() => modal.classList.add('is-open'));
+    if (!squareStarted) {
+      squareStarted = true;
+      loadSquare();
+    }
+    (state.verifiedEmail ? submitBtn : emailInput).focus({ preventScroll: true });
+  }
+
+  function closeCheckout() {
+    modal.classList.remove('is-open');
+    modal.hidden = true;
+    document.body.classList.remove('rn-locked');
+    lastFocus?.focus({ preventScroll: true });
+  }
+
+  $$('[data-open-checkout]').forEach((b) => b.addEventListener('click', openCheckout));
+  $('[data-close-checkout]')!.addEventListener('click', closeCheckout);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeCheckout();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.hidden && !submitBtn.disabled) closeCheckout();
+  });
+
+  // ---- Sticky bar ----
+  const onScroll = () => {
+    const show = window.scrollY > 500;
+    sticky.classList.toggle('is-visible', show);
+    sticky.setAttribute('aria-hidden', String(!show));
+    sticky.querySelector('button')!.tabIndex = show ? 0 : -1;
+    document.body.classList.toggle('rn-has-sticky', show);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
   // ---- Account verification ----
   async function verify() {
@@ -398,11 +691,11 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     render();
     if (!email) {
       verifyStatus.textContent = 'Please enter the email on your account.';
-      verifyStatus.className = 'verify-status is-error';
+      verifyStatus.className = 'rn-verify-status is-error';
       return;
     }
     verifyStatus.textContent = 'Checking…';
-    verifyStatus.className = 'verify-status';
+    verifyStatus.className = 'rn-verify-status';
     verifyBtn.disabled = true;
     try {
       const res = await fetch('/api/renewal/lookup', {
@@ -424,20 +717,20 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
         accountBox.hidden = false;
         showError(payError, '');
         verifyStatus.textContent = 'Account verified.';
-        verifyStatus.className = 'verify-status is-ok';
+        verifyStatus.className = 'rn-verify-status is-ok';
       } else if (res.ok) {
         verifyStatus.innerHTML = 'No account found with this email. <a href="/contact/?topic=annual-renewal">Contact our team</a>.';
-        verifyStatus.className = 'verify-status is-error';
+        verifyStatus.className = 'rn-verify-status is-error';
       } else if (res.status === 503) {
         verifyStatus.textContent = 'Online renewal is temporarily unavailable. Please call us to renew.';
-        verifyStatus.className = 'verify-status is-error';
+        verifyStatus.className = 'rn-verify-status is-error';
       } else {
         verifyStatus.textContent = res.status === 400 ? 'Please enter a valid email address.' : 'Something went wrong. Please try again.';
-        verifyStatus.className = 'verify-status is-error';
+        verifyStatus.className = 'rn-verify-status is-error';
       }
     } catch {
       verifyStatus.textContent = 'Something went wrong. Please try again.';
-      verifyStatus.className = 'verify-status is-error';
+      verifyStatus.className = 'rn-verify-status is-error';
     } finally {
       verifyBtn.disabled = false;
       render();
@@ -461,64 +754,52 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
     }
   });
 
-  // ---- Square card field ----
-  type SquareCard = { attach(sel: string): Promise<void>; tokenize(): Promise<{ status: string; token?: string; errors?: { message: string }[] }> };
+  // ---- Square card field (loaded when checkout first opens) ----
   let card: SquareCard | null = null;
+  const sdkFailed = () => showError(cardError, 'The payment form failed to load. Please refresh the page, or call us to renew.');
+  const getSquare = () => (window as unknown as { Square?: SquareGlobal }).Square;
 
   async function initSquare() {
-    const Square = (window as unknown as { Square?: { payments(app: string, loc: string): { card(opts?: object): Promise<SquareCard> } } }).Square;
-    if (!Square) return false;
+    const Square = getSquare();
+    if (!Square) return sdkFailed();
     try {
       const payments = Square.payments(cfg.dataset.appId!, cfg.dataset.locationId!);
       card = await payments.card({
         style: {
-          input: { color: '#0e1c1f', fontSize: '15px' },
-          'input::placeholder': { color: '#56666a' },
-          '.input-container.is-focus': { borderColor: '#74bf44' },
-          '.input-container.is-error': { borderColor: '#b42318' },
+          input: { color: '#001d21', fontSize: '15px' },
+          'input::placeholder': { color: '#4a6b6f' },
+          '.input-container.is-focus': { borderColor: '#7abc32' },
+          '.input-container.is-error': { borderColor: '#e24b4a' },
         },
       });
       await card.attach('#card-container');
-      return true;
     } catch (err) {
       console.error('Square init error', err);
-      showError(cardError, 'The payment form failed to load. Please refresh the page, or call us to renew.');
-      return false;
+      sdkFailed();
     }
   }
 
-  // The SDK loads async, so it may finish (or fail) before this script runs: wait for it
-  // briefly, then report a failure instead of leaving an empty card field.
-  const sdkFailed = () => showError(cardError, 'The payment form failed to load. Please refresh the page, or call us to renew.');
-  const hasSquare = () => Boolean((window as unknown as { Square?: unknown }).Square);
-  if (hasSquare()) initSquare();
-  else {
-    const sdk = document.querySelector('[data-square-sdk]');
-    sdk?.addEventListener('load', () => initSquare());
-    sdk?.addEventListener('error', sdkFailed);
+  function loadSquare() {
+    if (getSquare()) return void initSquare();
+    const s = document.createElement('script');
+    s.src = cfg.dataset.sdk!;
+    s.async = true;
+    s.addEventListener('load', () => initSquare());
+    s.addEventListener('error', sdkFailed);
+    document.head.appendChild(s);
     setTimeout(() => {
-      if (!card && !hasSquare()) sdkFailed();
+      if (!card && !getSquare()) sdkFailed();
     }, 8000);
   }
 
   // ---- Payment ----
-  form.addEventListener('change', (e) => {
-    if ((e.target as HTMLInputElement).name !== 'email') render();
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  submitBtn.addEventListener('click', async () => {
     showError(payError, '');
     showError(cardError, '');
-    const sel = selection();
 
     if (!state.verifiedEmail) {
       showError(payError, 'Please verify your email before completing your payment.');
       emailInput.focus();
-      return;
-    }
-    if (!sel.termination && !sel.termId) {
-      showError(payError, 'Please choose a maintenance term.');
       return;
     }
     if (!card) {
@@ -537,7 +818,13 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
       const res = await fetch('/api/renewal/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: state.verifiedEmail, ...sel, sourceId: tokenResult.token }),
+        body: JSON.stringify({
+          email: state.verifiedEmail,
+          termId: state.termId,
+          serviceIds: [...state.services],
+          termination: state.termination,
+          sourceId: tokenResult.token,
+        }),
       });
       const data = (await res.json()) as PayResponse;
       if (data.success && data.receipt) showConfirmation(data.receipt);
@@ -556,25 +843,14 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
 
   // ---- Confirmation ----
   function showConfirmation(r: Receipt) {
-    const section = $('[data-confirmation]')!;
+    const overlay = $('[data-confirmation]')!;
     if (r.termination) {
       $('[data-confirm-title]')!.textContent = 'Your Termination Service Payment Has Been Received.';
       $('[data-confirm-copy]')!.textContent =
         'Thank you. Our team will contact you about the documentation and next steps for formally terminating your plan. Your plan is not terminated until that process is complete.';
+      $('[data-confirm-steps]')!.replaceChildren(...listItems(terminationSteps));
     }
-    const list = $('[data-receipt-lines]')!;
-    list.replaceChildren(
-      ...r.lines.map((l) => {
-        const li = document.createElement('li');
-        const a = document.createElement('span');
-        const b = document.createElement('span');
-        a.textContent = l.label;
-        b.textContent = money(l.amount);
-        li.appendChild(a);
-        li.appendChild(b);
-        return li;
-      }),
-    );
+    $('[data-receipt-lines]')!.replaceChildren(...lineRows(r.lines, 'rn-confirm-line'));
     $('[data-receipt-total]')!.textContent = money(r.total);
     $('[data-receipt-date]')!.textContent = new Date(r.date).toLocaleString('en-US', { dateStyle: 'long', timeStyle: 'short' });
     if (r.reference) {
@@ -587,652 +863,1887 @@ const benefits: { icon: IconName; title: string; text: string }[] = [
       a.href = r.receiptUrl;
       a.hidden = false;
     }
-    form.hidden = true;
-    section.hidden = false;
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    section.focus({ preventScroll: true });
+    modal.classList.remove('is-open');
+    modal.hidden = true;
+    sticky.hidden = true;
+    overlay.hidden = false;
+    document.body.classList.add('rn-locked');
+    overlay.focus({ preventScroll: true });
   }
-
-  // "Pay for the termination service" link switches the checkout mode.
-  document.querySelector('[data-pay-termination]')?.addEventListener('click', () => {
-    const radio = form.querySelector('input[name="mode"][value="termination"]') as HTMLInputElement | null;
-    if (radio) radio.checked = true;
-    render();
-  });
 
   render();
 </script>
 
 <style>
-  .hero-small {
-    margin-top: 20px;
-    color: var(--muted-on-dark);
-    font-size: 0.9rem;
+  .rn {
+    --rn-dark: #001d21;
+    --rn-dark2: #002a30;
+    --rn-green: #7abc32;
+    --rn-green-hover: #5e9a22;
+    --rn-pale: #f6f9f1;
+    --rn-muted: #4a6b6f;
+    --rn-border: #d4e3c8;
+    --rn-red: #e24b4a;
+    --rn-mono: 'DM Mono', ui-monospace, monospace;
+    --rn-r: 12px;
+    --rn-r-lg: 20px;
+    color: var(--rn-dark);
   }
 
-  /* B. Information panel (professional, not alarming) */
-  .info-panel {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 24px;
-    padding: clamp(28px, 4vw, 48px);
-    border-left: 4px solid var(--lime);
-    border-radius: 0 var(--radius) var(--radius) 0;
-    background: var(--cream);
+  /* ---- Shared ---- */
+  .rn-section {
+    padding: clamp(56px, 7vw, 88px) 0;
   }
 
-  .info-panel h2 {
-    margin-bottom: 20px;
-  }
-
-  .info-copy {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    color: #2f3f42;
-  }
-
-  .info-statement {
-    margin-top: 24px;
-    padding-top: 20px;
-    border-top: 1px solid var(--line);
-    font-size: 1.15rem;
-    font-weight: 600;
-  }
-
-  /* C. Benefits */
-  .includes {
-    padding-top: 0;
-  }
-
-  .benefit-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-  }
-
-  .benefit-grid .icon-box {
-    margin-bottom: 18px;
-  }
-
-  .muted-line {
-    margin-top: 20px;
-    color: var(--muted);
-    font-size: 0.95rem;
-  }
-
-  /* D. Terms */
-  #renewal-options {
-    background: var(--cream);
-    scroll-margin-top: 16px;
-  }
-
-  .terms {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
-  .term {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 28px;
-    border: 2px solid var(--line);
-    border-radius: var(--radius);
+  .rn-white {
     background: #fff;
-    cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
-  .term input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+  .rn-pale {
+    background: var(--rn-pale);
   }
 
-  .term:has(input:checked) {
-    border-color: var(--lime);
-    box-shadow: 0 0 0 4px rgba(116, 191, 68, 0.18);
-  }
-
-  .term:has(input:focus-visible) {
-    outline: 3px solid var(--lime);
-    outline-offset: 2px;
-  }
-
-  .term-badge {
-    align-self: flex-start;
-    margin-bottom: 6px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: var(--ink);
-    color: var(--lime);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .term-years {
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-weight: 700;
+  .rn-label,
+  .rn-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--rn-green);
+    font-family: var(--rn-mono);
+    font-size: 11px;
+    font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  .term-price {
-    font-size: 2.6rem;
-    font-weight: 600;
-    line-height: 1.1;
+  .rn-label::before,
+  .rn-eyebrow::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: currentColor;
+  }
+
+  .rn-label-dim {
+    color: rgba(246, 249, 241, 0.45);
+  }
+
+  .rn-title {
+    margin-bottom: 16px;
+    font-size: clamp(28px, 3vw, 40px);
+    font-weight: 700;
+    line-height: 1.2;
     letter-spacing: -0.03em;
   }
 
-  .term-label {
+  .rn-sub {
+    max-width: 580px;
+    color: var(--rn-muted);
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .rn-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--rn-green);
+    color: var(--rn-dark);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s;
+  }
+
+  .rn-btn:hover {
+    background: var(--rn-green-hover);
+    transform: translateY(-1px);
+  }
+
+  .rn-btn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+  }
+
+  .rn-btn-lg {
+    padding: 16px 36px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .rn-btn-xl {
+    padding: 18px 52px;
+    border-radius: 10px;
+    font-size: 17px;
+  }
+
+  .rn-btn-sm {
+    flex: none;
+    padding: 11px 18px;
+    font-size: 13px;
+  }
+
+  .rn-text-link {
+    display: inline-block;
+    margin-top: 20px;
+    color: var(--rn-green-hover);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .rn-text-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .rn-card-label {
+    margin-bottom: 6px;
+    color: var(--rn-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .rn-green {
+    color: var(--rn-green);
+  }
+
+  .rn-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    background: var(--rn-green);
+    color: var(--rn-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+
+  .rn-pill-link {
+    margin-top: 24px;
+    font-size: 12px;
+  }
+
+  .rn-pill-link:hover {
+    background: var(--rn-green-hover);
+  }
+
+  .rn-dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-top: 8px;
+    border-radius: 50%;
+    background: var(--rn-green);
+  }
+
+  /* Radio / checkbox visuals */
+  .rn-radio,
+  .rn-check {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--rn-border);
+    border-radius: 50%;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .rn-check {
+    border-radius: 5px;
+    background: #fff;
+  }
+
+  .is-selected > .rn-radio {
+    border-color: var(--rn-green);
+  }
+
+  .is-selected > .rn-radio::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--rn-green);
+    transform: translate(-50%, -50%);
+  }
+
+  .is-selected > .rn-check,
+  .is-selected .rn-cancel-left > .rn-check {
+    border-color: var(--rn-green);
+    background: var(--rn-green);
+  }
+
+  .is-selected > .rn-check::after,
+  .is-selected .rn-cancel-left > .rn-check::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid var(--rn-dark);
+    border-top: 0;
+    border-left: 0;
+    transform: rotate(45deg);
+  }
+
+  .is-selected > .rn-check-red,
+  .is-selected .rn-cancel-left > .rn-check-red {
+    border-color: var(--rn-red);
+    background: var(--rn-red);
+  }
+
+  .is-selected > .rn-check-red::after,
+  .is-selected .rn-cancel-left > .rn-check-red::after {
+    border-color: #fff;
+  }
+
+  .is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ---- Hero ---- */
+  .rn-hero {
+    position: relative;
+    overflow: hidden;
+    padding: calc(var(--plate-overhang) + 56px) 0 80px;
+    background: var(--rn-dark);
+  }
+
+  .rn-hero::before,
+  .rn-hero::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .rn-hero::before {
+    top: -120px;
+    right: -120px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(122, 188, 50, 0.08) 0%, transparent 70%);
+  }
+
+  .rn-hero::after {
+    bottom: -80px;
+    left: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(122, 188, 50, 0.05) 0%, transparent 70%);
+  }
+
+  .rn-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: clamp(40px, 6vw, 80px);
+    align-items: center;
+  }
+
+  .rn-eyebrow {
+    margin-bottom: 24px;
+    font-size: 12px;
+  }
+
+  .rn-eyebrow::before {
+    width: 24px;
+  }
+
+  .rn-hero h1 {
+    margin-bottom: 24px;
+    color: var(--rn-pale);
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-hero h1 em {
+    display: block;
+    color: var(--rn-green);
+    font-style: normal;
+  }
+
+  .rn-hero-sub {
+    max-width: 540px;
+    margin-bottom: 16px;
+    color: rgba(246, 249, 241, 0.65);
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .rn-hero-ctas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 32px 0 36px;
+  }
+
+  .rn-link-quiet {
+    color: rgba(246, 249, 241, 0.45);
+    font-size: 13px;
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+  }
+
+  .rn-link-quiet:hover {
+    color: rgba(246, 249, 241, 0.75);
+  }
+
+  .rn-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+  }
+
+  .rn-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(246, 249, 241, 0.55);
+    font-size: 13px;
+  }
+
+  .rn-trust-check {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(122, 188, 50, 0.2);
+    color: var(--rn-green);
+  }
+
+  .rn-hero-card {
+    padding: 36px;
+    border: 1px solid var(--rn-border);
+    border-radius: var(--rn-r-lg);
+    background: #fff;
+  }
+
+  .rn-hero-card-title {
+    margin-bottom: 16px;
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .rn-hero-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rn-pale);
+    font-size: 15px;
+  }
+
+  .rn-hero-feature:last-of-type {
+    border-bottom: 0;
+  }
+
+  /* ---- Included ---- */
+  .rn-included-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .rn-included-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .rn-included-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    border: 1px solid var(--rn-border);
+    border-radius: 10px;
+    background: var(--rn-pale);
+  }
+
+  .rn-included-item strong {
+    display: block;
+    font-size: 15px;
     font-weight: 600;
   }
 
-  .term-saving {
-    color: var(--green);
-    font-size: 0.9rem;
+  .rn-included-item span:not(.rn-included-icon) {
+    display: block;
+    color: var(--rn-muted);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .rn-included-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(122, 188, 50, 0.15);
+    color: var(--rn-green-hover);
+  }
+
+  .rn-course-card {
+    padding: 40px;
+    border-radius: var(--rn-r-lg);
+    background: var(--rn-dark);
+    color: var(--rn-pale);
+  }
+
+  .rn-course-card h3 {
+    margin-bottom: 12px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .rn-course-card p {
+    margin-bottom: 24px;
+    color: rgba(246, 249, 241, 0.6);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .rn-course-features {
+    display: grid;
+    gap: 10px;
+  }
+
+  .rn-course-features div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(246, 249, 241, 0.85);
+    font-size: 14px;
+  }
+
+  .rn-course-features div::before {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--rn-green);
+  }
+
+  /* ---- Strip ---- */
+  .rn-strip {
+    padding: 24px var(--gutter);
+    background: var(--rn-dark);
+    text-align: center;
+  }
+
+  .rn-strip p {
+    margin: 0;
+    color: rgba(246, 249, 241, 0.6);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  .rn-strip strong {
+    color: var(--rn-pale);
     font-weight: 500;
   }
 
-  .term-check {
+  /* ---- Pricing ---- */
+  #renewal-options,
+  #closing {
+    scroll-margin-top: 16px;
+  }
+
+  .rn-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 48px;
+  }
+
+  .rn-price-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 36px 32px;
+    border: 2px solid var(--rn-border);
+    border-radius: var(--rn-r-lg);
+    background: var(--rn-pale);
+    color: var(--rn-dark);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .rn-price-card:not(:disabled):hover {
+    border-color: var(--rn-green);
+    transform: translateY(-2px);
+  }
+
+  .rn-price-card.is-selected {
+    border-color: var(--rn-green);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(122, 188, 50, 0.12);
+  }
+
+  .rn-price-card.is-featured {
+    border-color: var(--rn-green);
+    background: var(--rn-dark);
+  }
+
+  .rn-price-card .rn-radio {
+    margin-bottom: 20px;
+  }
+
+  .rn-price-card.is-featured .rn-radio {
+    border-color: rgba(246, 249, 241, 0.3);
+  }
+
+  .rn-price-card.is-featured.is-selected .rn-radio {
+    border-color: var(--rn-green);
+  }
+
+  .rn-price-badge {
     position: absolute;
-    top: 20px;
+    top: -13px;
+    left: 50%;
+    padding: 4px 16px;
+    border-radius: 20px;
+    background: var(--rn-green);
+    color: var(--rn-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .rn-price-term {
+    margin-bottom: 8px;
+    color: var(--rn-muted);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .rn-price-amount {
+    margin-bottom: 8px;
+    font-family: var(--font-heading);
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .rn-price-save {
+    min-height: 1.4em;
+    margin-bottom: 6px;
+    color: var(--rn-green-hover);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: pre;
+  }
+
+  .rn-price-hint {
+    color: var(--rn-muted);
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .is-featured .rn-price-term {
+    color: rgba(246, 249, 241, 0.6);
+  }
+
+  .is-featured .rn-price-amount {
+    color: var(--rn-pale);
+  }
+
+  .is-featured .rn-price-save {
+    color: var(--rn-green);
+  }
+
+  .is-featured .rn-price-hint {
+    color: rgba(246, 249, 241, 0.45);
+  }
+
+  /* ---- Add-ons ---- */
+  .rn-addons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 48px;
+  }
+
+  .rn-addon-wrap {
+    position: relative;
+    display: flex;
+  }
+
+  .rn-addon {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 28px 24px;
+    border: 2px solid var(--rn-border);
+    border-radius: var(--rn-r);
+    background: var(--rn-pale);
+    color: var(--rn-dark);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  }
+
+  .rn-addon:not(:disabled):hover {
+    border-color: var(--rn-green);
+  }
+
+  .rn-addon.is-selected {
+    border-color: var(--rn-green);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(122, 188, 50, 0.1);
+  }
+
+  .rn-addon .rn-check {
+    margin-bottom: 16px;
+  }
+
+  .rn-addon-name {
+    margin-bottom: 6px;
+    padding-right: 24px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .rn-addon-price {
+    margin-bottom: 8px;
+    font-family: var(--rn-mono);
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .rn-addon-desc {
+    color: var(--rn-muted);
+    font-size: 13px;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .rn-tip {
+    position: absolute;
+    top: 24px;
     right: 20px;
     display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--rn-muted);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: help;
+  }
+
+  .rn-tip-text {
+    position: absolute;
+    right: -8px;
+    bottom: 28px;
+    z-index: 10;
+    display: none;
+    width: 260px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--rn-dark);
+    color: var(--rn-pale);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    box-shadow: 0 8px 24px rgba(0, 29, 33, 0.2);
+  }
+
+  .rn-tip:hover .rn-tip-text,
+  .rn-tip:focus .rn-tip-text {
+    display: block;
+  }
+
+  .rn-hint {
+    margin-top: 20px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--rn-green);
+    border-radius: 0 8px 8px 0;
+    background: rgba(122, 188, 50, 0.08);
+    color: var(--rn-dark);
+    font-size: 14px;
+  }
+
+  .rn-hint a {
+    color: var(--rn-green-hover);
+    font-weight: 600;
+  }
+
+  /* ---- Why it matters ---- */
+  .rn-why {
+    padding: 72px 0;
+    background: var(--rn-dark);
+  }
+
+  .rn-why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  .rn-why-title {
+    margin-bottom: 12px;
+    color: var(--rn-pale);
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-why-sub {
+    color: rgba(246, 249, 241, 0.55);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  .rn-why-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-why-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    border: 1px solid rgba(246, 249, 241, 0.08);
+    border-radius: 10px;
+    background: rgba(246, 249, 241, 0.04);
+  }
+
+  .rn-why-list p {
+    margin: 0;
+    color: rgba(246, 249, 241, 0.75);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.55;
+  }
+
+  .rn-why-list .rn-why-statement {
+    border-color: rgba(122, 188, 50, 0.3);
+    background: rgba(122, 188, 50, 0.08);
+  }
+
+  .rn-why-statement p {
+    color: var(--rn-pale);
+    font-weight: 500;
+  }
+
+  .rn-why-icon {
+    display: grid;
+    flex: none;
     place-items: center;
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 2px solid var(--line);
-    color: transparent;
+    background: rgba(246, 249, 241, 0.1);
+    color: var(--rn-pale);
   }
 
-  .term:has(input:checked) .term-check {
-    border-color: var(--lime);
-    background: var(--lime);
-    color: var(--ink);
+  .rn-why-icon.is-green {
+    background: var(--rn-green);
+    color: var(--rn-dark);
   }
 
-  /* E. Services + checkout */
-  .checkout-grid {
-    display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: clamp(28px, 5vw, 64px);
-    align-items: start;
-  }
-
-  .services {
-    display: grid;
-    gap: 12px;
-    margin: 28px 0 0;
-    padding: 0;
-    border: 0;
-  }
-
-  .service {
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+  /* ---- Closing ---- */
+  .rn-cancel-card {
+    display: block;
+    width: 100%;
+    margin-top: 48px;
+    padding: 36px 40px;
+    border: 2px solid var(--rn-border);
+    border-radius: var(--rn-r-lg);
     background: #fff;
-  }
-
-  .service:has(input:checked) {
-    border-color: var(--lime);
-    background: #fbfdf8;
-  }
-
-  .service-main {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 14px;
-    align-items: start;
-    padding: 18px 20px;
+    color: var(--rn-dark);
+    font: inherit;
+    text-align: left;
     cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
 
-  .service-main input {
-    width: 20px;
-    height: 20px;
-    margin: 2px 0 0;
-    accent-color: var(--green);
+  .rn-cancel-card:hover {
+    border-color: var(--rn-red);
   }
 
-  .service-text strong {
-    display: block;
-    font-weight: 600;
+  .rn-cancel-card.is-selected {
+    border-color: var(--rn-red);
+    box-shadow: 0 0 0 4px rgba(226, 75, 75, 0.08);
   }
 
-  .service-text span {
-    display: block;
-    color: var(--muted);
-    font-size: 0.925rem;
-  }
-
-  .service-price {
-    font-weight: 700;
-  }
-
-  .service-info {
+  .rn-cancel-head {
     display: flex;
-    gap: 8px;
-    margin: 0 20px 18px 54px;
-    padding: 12px 14px;
-    border-radius: var(--radius-sm);
-    background: var(--cream);
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
-  .service-info :global(.icon) {
-    flex: none;
-    margin-top: 3px;
-    color: var(--green);
-  }
-
-  .checkout {
-    position: sticky;
-    top: 24px;
-    padding: clamp(24px, 3vw, 36px);
-    border-radius: 20px;
-    background: #fff;
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow-lg);
-    scroll-margin-top: 16px;
-  }
-
-  .checkout h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-  }
-
-  .summary {
-    display: grid;
-    gap: 10px;
-    margin: 0;
-    padding: 0 0 16px;
-    list-style: none;
-    border-bottom: 1px solid var(--line);
-  }
-
-  /* :global because the script re-renders these items */
-  .summary :global(li) {
-    display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 16px;
-    font-size: 0.95rem;
+    gap: 24px;
   }
 
-  .summary :global(li span:last-child) {
+  .rn-cancel-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .rn-cancel-left .rn-check {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+  }
+
+  .rn-cancel-title {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 17px;
     font-weight: 600;
+  }
+
+  .rn-cancel-sub {
+    display: block;
+    max-width: 640px;
+    color: var(--rn-muted);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .rn-cancel-price {
+    font-family: var(--rn-mono);
+    font-size: 28px;
+    font-weight: 500;
     white-space: nowrap;
   }
 
-  .summary-total {
+  .rn-cancel-note {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 16px 0 24px;
-    font-weight: 600;
+    gap: 10px;
+    margin: 16px 0 0;
+    padding: 12px 16px;
+    border: 1px solid var(--rn-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--rn-muted);
+    font-size: 13px;
   }
 
-  .summary-total strong {
-    font-size: 1.8rem;
-    letter-spacing: -0.02em;
-  }
-
-
-  .checkout-button {
-    width: 100%;
-    margin-top: 24px;
-  }
-
-  .checkout-note {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
-  .checkout-note :global(.icon) {
+  .rn-cancel-note :global(.icon) {
     flex: none;
-    margin-top: 3px;
+    margin-top: 2px;
+    color: var(--rn-green-hover);
   }
 
-  /* Checkout: mode, verification, card */
-  .mode {
+  /* ---- FAQ ---- */
+  .rn-faq {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 18px;
-    padding: 4px;
-    border-radius: 12px;
-    background: var(--cream);
+    gap: 8px;
+    margin-top: 40px;
   }
 
-  .mode label {
+  .rn-faq details {
+    overflow: hidden;
+    border: 1px solid var(--rn-border);
+    border-radius: var(--rn-r);
+    background: #fff;
+  }
+
+  .rn-faq summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 28px;
+    font-size: 16px;
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .rn-faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rn-faq summary:hover {
+    background: var(--rn-pale);
+  }
+
+  .rn-faq-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--rn-pale);
+    color: var(--rn-green-hover);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+    transition: transform 0.2s, background 0.15s;
+  }
+
+  .rn-faq details[open] .rn-faq-icon {
+    background: var(--rn-green);
+    color: var(--rn-dark);
+    transform: rotate(45deg);
+  }
+
+  .rn-faq-answer {
+    padding: 16px 28px 22px;
+    border-top: 1px solid var(--rn-pale);
+    color: var(--rn-muted);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  .rn-faq-answer p + p {
+    margin-top: 10px;
+  }
+
+  /* ---- Final CTA ---- */
+  .rn-final {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(64px, 9vw, 96px) 0;
+    background: var(--rn-dark);
+    text-align: center;
+  }
+
+  .rn-final::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    width: min(800px, 100%);
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(122, 188, 50, 0.1) 0%, transparent 70%);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .rn-final .container {
+    position: relative;
+  }
+
+  .rn-final h2 {
+    margin-bottom: 16px;
+    color: var(--rn-pale);
+    font-size: clamp(30px, 4vw, 52px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-final p {
+    max-width: 620px;
+    margin: 0 auto 40px;
+    color: rgba(246, 249, 241, 0.55);
+    font-size: 16px;
+    font-weight: 300;
+  }
+
+  .rn-final .rn-final-sub {
+    margin: 16px auto 0;
+    color: rgba(246, 249, 241, 0.35);
+    font-size: 13px;
+  }
+
+  /* ---- Sticky bar ---- */
+  .rn-sticky {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px max(var(--gutter), calc((100vw - var(--container)) / 2 + var(--gutter)));
+    border-top: 1px solid var(--rn-border);
+    background: #fff;
+    box-shadow: 0 -4px 24px rgba(0, 29, 33, 0.08);
+    transform: translateY(100%);
+    transition: transform 0.3s;
+  }
+
+  .rn-sticky.is-visible {
+    transform: translateY(0);
+  }
+
+  :global(body.rn-has-sticky) {
+    padding-bottom: 80px;
+  }
+
+  :global(body.rn-locked) {
+    overflow: hidden;
+  }
+
+  .rn-sticky-label {
+    color: var(--rn-muted);
+    font-size: 12px;
+  }
+
+  .rn-sticky-total {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-sticky-total small {
+    margin-left: 6px;
+    color: var(--rn-muted);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .rn-sticky-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .rn-sticky-selection {
+    color: var(--rn-muted);
+    font-size: 13px;
+  }
+
+  /* ---- Checkout modal ---- */
+  .rn-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 9px 10px;
-    border-radius: 9px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: center;
+    padding: 24px;
+    background: rgba(0, 29, 33, 0.75);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .rn-modal-overlay.is-open {
+    opacity: 1;
+  }
+
+  .rn-modal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1060px;
+    max-height: 92vh;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #fff;
+    transform: translateY(24px);
+    transition: transform 0.25s;
+  }
+
+  .rn-modal-overlay.is-open .rn-modal {
+    transform: none;
+  }
+
+  .rn-modal-header {
+    display: flex;
+    flex: none;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 28px 40px 24px;
+    background: var(--rn-dark);
+  }
+
+  .rn-modal-title {
+    color: var(--rn-pale);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .rn-modal-sub {
+    margin-top: 4px;
+    color: rgba(246, 249, 241, 0.55);
+    font-size: 14px;
+    font-weight: 300;
+  }
+
+  .rn-modal-close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(246, 249, 241, 0.1);
+    color: rgba(246, 249, 241, 0.7);
     cursor: pointer;
   }
 
-  .mode label:has(input:checked) {
-    background: #fff;
-    box-shadow: var(--shadow);
+  .rn-modal-close:hover {
+    background: rgba(246, 249, 241, 0.2);
+    color: var(--rn-pale);
   }
 
-  .mode input {
-    accent-color: var(--green);
+  .rn-modal-body {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 1fr 340px;
+    min-height: 0;
   }
 
-  .mode-note,
-  .fee-note {
+  .rn-modal-left {
     display: flex;
-    gap: 8px;
-    margin: -4px 0 16px;
-    color: var(--muted);
-    font-size: 0.85rem;
+    flex-direction: column;
+    gap: 24px;
+    padding: 32px 40px;
+    overflow-y: auto;
   }
 
-  .fee-note {
-    margin: 10px 0 0;
+  .rn-modal-right {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 28px;
+    overflow-y: auto;
+    border-left: 1px solid var(--rn-border);
+    background: var(--rn-pale);
   }
 
-  .mode-note :global(.icon) {
-    flex: none;
-    margin-top: 3px;
-    color: var(--green);
+  .rn-msec {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rn-border);
   }
 
-  .step {
+  .rn-msec-label,
+  .rn-mform-label {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--rn-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .rn-mform-label {
+    margin-bottom: 6px;
+    font-size: 12px;
+    letter-spacing: 0.07em;
+  }
+
+  .rn-mlist {
     display: grid;
     gap: 10px;
-    margin-bottom: 22px;
   }
 
-  .step-label {
+  .rn-mopt {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--rn-border);
+    border-radius: 10px;
+    background: var(--rn-pale);
+    color: var(--rn-dark);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
   }
 
-  .step-label span {
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--lime);
-    font-size: 0.75rem;
+  .rn-mopt .rn-radio,
+  .rn-mopt .rn-check {
+    width: 18px;
+    height: 18px;
   }
 
-  .verify-row {
-    display: flex;
-    gap: 8px;
+  .rn-mopt .rn-radio::after {
+    width: 9px !important;
+    height: 9px !important;
   }
 
-  .verify-row .input {
+  .rn-mopt .rn-check::after {
+    top: 1px !important;
+    left: 4px !important;
+    height: 8px !important;
+  }
+
+  .rn-mopt:not(:disabled):hover {
+    border-color: var(--rn-green);
+  }
+
+  .rn-mopt.is-selected {
+    border-color: var(--rn-green);
+    background: #fff;
+  }
+
+  .rn-mopt-red:hover,
+  .rn-mopt-red.is-selected {
+    border-color: var(--rn-red) !important;
+  }
+
+  .rn-mopt-red.is-selected {
+    background: #fff8f8;
+  }
+
+  .rn-mopt-info {
     flex: 1;
     min-width: 0;
   }
 
-  .verify-row .button {
-    min-height: 46px;
+  .rn-mopt-name {
+    display: block;
+    font-size: 15px;
+    font-weight: 500;
   }
 
-  .verify-status {
+  .rn-mopt-save {
+    display: block;
+    color: var(--rn-green-hover);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .rn-mopt-desc {
+    display: block;
+    margin-top: 2px;
+    color: var(--rn-muted);
+    font-size: 12px;
+  }
+
+  .rn-mopt-price {
+    font-family: var(--rn-mono);
+    font-size: 17px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .rn-mnote {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px solid var(--rn-border);
+    border-radius: 8px;
+    background: var(--rn-pale);
+    color: var(--rn-muted);
+    font-size: 13px;
+  }
+
+  .rn-verify-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .rn-input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 14px;
+    border: 1.5px solid var(--rn-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--rn-dark);
+    font: inherit;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .rn-input:focus {
+    border-color: var(--rn-green);
+  }
+
+  .rn-verify-status {
     min-height: 1em;
-    margin: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
+    margin: 6px 0 0;
+    color: var(--rn-muted);
+    font-size: 13px;
   }
 
-  .verify-status.is-ok {
-    color: var(--green);
+  .rn-verify-status.is-ok {
+    color: var(--rn-green-hover);
   }
 
-  .verify-status.is-error {
-    color: var(--danger);
+  .rn-verify-status.is-error {
+    color: #a32d2d;
   }
 
-  .account {
+  .rn-account {
     display: flex;
     gap: 10px;
+    margin-top: 10px;
     padding: 12px 14px;
-    border-radius: var(--radius-sm);
-    background: var(--lime-soft);
-    font-size: 0.9rem;
+    border: 1px solid rgba(122, 188, 50, 0.3);
+    border-radius: 8px;
+    background: rgba(122, 188, 50, 0.08);
+    font-size: 14px;
   }
 
-  .account :global(.icon) {
-    flex: none;
+  .rn-account .rn-trust-check {
     margin-top: 3px;
-    color: var(--green);
   }
 
-  .account strong,
-  .account span {
+  .rn-account strong,
+  .rn-account span:not(.rn-trust-check) {
     display: block;
   }
 
-  .account span {
-    color: var(--muted);
-    font-size: 0.85rem;
+  .rn-account span:not(.rn-trust-check) {
+    color: var(--rn-muted);
+    font-size: 13px;
   }
 
-  .card-container {
-    min-height: 90px;
-  }
-
-  .pay-error {
-    margin: 0;
-    color: var(--danger);
-    font-size: 0.85rem;
-  }
-
-  [data-pay-error] {
-    margin-top: 4px;
-  }
-
-  .is-disabled {
-    opacity: 0.45;
-    pointer-events: none;
-  }
-
-  /* I. Confirmation */
-  .confirmation:focus {
-    outline: none;
-  }
-
-  .confirm-card {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: clamp(28px, 5vw, 56px);
-    border-radius: 20px;
-    background: #fff;
-    border: 1px solid var(--line);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .confirm-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: var(--lime-soft);
-    color: #2d6a12;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-
-  .confirm-card h2 {
+  .rn-card-icons {
+    display: flex;
+    gap: 6px;
     margin-bottom: 14px;
   }
 
-  .confirm-card > p {
-    color: var(--muted);
-  }
-
-  .receipt {
-    margin: 28px 0;
-    padding: 24px;
-    border-radius: var(--radius);
-    background: var(--cream);
-  }
-
-  .receipt h3 {
-    margin-bottom: 12px;
-    font-size: 1rem;
-  }
-
-  .receipt ul {
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    padding: 0 0 14px;
-    list-style: none;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .receipt :global(li) {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .receipt-total {
-    display: flex;
-    justify-content: space-between;
-    padding: 14px 0;
+  .rn-card-icons span {
+    padding: 3px 8px;
+    border: 1px solid var(--rn-border);
+    border-radius: 5px;
+    background: var(--rn-pale);
+    color: var(--rn-muted);
+    font-size: 11px;
     font-weight: 600;
   }
 
-  .receipt-total strong {
-    font-size: 1.4rem;
+  .rn-card-container {
+    min-height: 90px;
+    padding: 12px;
+    border: 1.5px solid var(--rn-border);
+    border-radius: 8px;
+    background: #fff;
   }
 
-  .receipt-meta {
+  .rn-error {
+    margin: 8px 0 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(226, 75, 75, 0.3);
+    border-radius: 8px;
+    background: rgba(226, 75, 75, 0.08);
+    color: #a32d2d;
+    font-size: 13px;
+  }
+
+  [data-pay-error] {
+    margin: 0 0 12px;
+  }
+
+  .rn-submit {
+    width: 100%;
+    padding: 16px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--rn-green);
+    color: var(--rn-dark);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.12s;
+  }
+
+  .rn-submit:hover {
+    background: var(--rn-green-hover);
+    transform: translateY(-1px);
+  }
+
+  .rn-submit:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+  }
+
+  .rn-submit-sub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    color: var(--rn-muted);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .rn-submit-sub :global(.icon) {
+    flex: none;
+    color: var(--rn-green-hover);
+  }
+
+  .rn-order-title {
+    margin-bottom: 12px;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .rn-modal-right :global(.rn-order-line) {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rn-border);
+    font-size: 14px;
+  }
+
+  .rn-modal-right :global(.rn-order-line span:last-child) {
+    font-family: var(--rn-mono);
+    white-space: nowrap;
+  }
+
+  .rn-fee-note {
+    margin: 10px 0 0;
+    color: var(--rn-muted);
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  .rn-order-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 2px solid var(--rn-dark);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .rn-order-total strong {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-order-box {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid var(--rn-border);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 13px;
+  }
+
+  .rn-order-box-green {
+    border-color: rgba(122, 188, 50, 0.25);
+    background: rgba(122, 188, 50, 0.08);
+  }
+
+  .rn-order-box small {
+    display: block;
+    margin-top: 3px;
+    color: var(--rn-muted);
+    font-size: 12px;
+  }
+
+  .rn-order-box-label {
+    margin-bottom: 8px;
+    color: var(--rn-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .rn-order-box-green .rn-order-box-label {
+    color: var(--rn-green-hover);
+  }
+
+  .rn-next {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+  }
+
+  .rn-next :global(li::marker) {
+    color: var(--rn-green-hover);
+    font-weight: 700;
+  }
+
+  /* ---- Confirmation ---- */
+  .rn-confirm {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    overflow-y: auto;
+    background: var(--rn-pale);
+  }
+
+  .rn-confirm:focus {
+    outline: none;
+  }
+
+  .rn-confirm-nav {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 18px var(--gutter);
+    border-bottom: 1px solid var(--rn-border);
+    background: #fff;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .rn-confirm-nav img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+  }
+
+  .rn-confirm-body {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: clamp(40px, 6vw, 60px) var(--gutter);
+  }
+
+  .rn-confirm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+    padding: 8px 20px;
+    border: 1px solid rgba(122, 188, 50, 0.3);
+    border-radius: 30px;
+    background: rgba(122, 188, 50, 0.12);
+    color: var(--rn-green-hover);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .rn-confirm-check {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--rn-green);
+    color: var(--rn-dark);
+  }
+
+  .rn-confirm-title {
+    margin-bottom: 12px;
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-confirm-sub {
+    margin-bottom: 40px;
+    color: var(--rn-muted);
+    font-size: 17px;
+    font-weight: 300;
+  }
+
+  .rn-confirm-card {
+    margin-bottom: 20px;
+    padding: 32px;
+    border: 1px solid var(--rn-border);
+    border-radius: var(--rn-r-lg);
+    background: #fff;
+  }
+
+  .rn-confirm-card-title {
+    margin-bottom: 12px;
+    color: var(--rn-muted);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .rn-confirm-card :global(.rn-confirm-line) {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rn-pale);
+    font-size: 15px;
+  }
+
+  .rn-confirm-card :global(.rn-confirm-line span:last-child) {
+    font-family: var(--rn-mono);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .rn-confirm-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 2px solid var(--rn-dark);
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .rn-confirm-total strong {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .rn-confirm-meta {
     display: grid;
     grid-template-columns: max-content 1fr;
     gap: 6px 16px;
-    margin: 0 0 12px;
-    color: var(--muted);
-    font-size: 0.875rem;
+    margin: 20px 0 0;
+    color: var(--rn-muted);
+    font-size: 14px;
   }
 
-  .receipt-meta dd {
+  .rn-confirm-meta dd {
     margin: 0;
     overflow-wrap: anywhere;
   }
 
-  .closing-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 24px;
+  .rn-confirm-next {
+    margin-bottom: 32px;
+    padding: 28px 32px;
+    border-radius: var(--rn-r-lg);
+    background: var(--rn-dark);
   }
 
-  /* F. Learning reminder (compact) */
-  .learning-row {
+  .rn-confirm-next-title {
+    margin-bottom: 12px;
+    color: var(--rn-pale);
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .rn-confirm-next ol {
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 20px;
-    align-items: center;
-    padding: 24px 28px;
-    border-radius: var(--radius);
-    background: var(--cream);
+    gap: 8px;
+    margin: 0;
+    padding-left: 20px;
+    color: rgba(246, 249, 241, 0.8);
+    font-size: 15px;
   }
 
-  .learning-row h2 {
-    font-size: 1.2rem;
-    letter-spacing: -0.01em;
+  .rn-confirm-next :global(li::marker) {
+    color: var(--rn-green);
+    font-weight: 700;
   }
 
-  .learning-row p {
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 0.925rem;
-  }
-
-  /* H. Closing a plan */
-  .closing {
-    border-top: 1px solid var(--line);
-  }
-
-  .closing-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 24px 48px;
-  }
-
-  .closing-row > div {
-    max-width: 62ch;
-  }
-
-  .closing-fee {
-    margin-top: 12px;
-    font-weight: 600;
-  }
-
-  @media (max-width: 1020px) {
-    .benefit-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .checkout-grid {
+  /* ---- Responsive ---- */
+  @media (max-width: 960px) {
+    .rn-hero-inner,
+    .rn-included-grid,
+    .rn-why-grid {
       grid-template-columns: 1fr;
     }
 
-    .checkout {
-      position: static;
+    .rn-hero-card {
+      display: none;
+    }
+
+    .rn-pricing-grid,
+    .rn-addons-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .rn-price-card {
+      padding: 28px 24px;
+    }
+
+    .rn-sticky-selection {
+      display: none;
     }
   }
 
-  @media (max-width: 860px) {
-    .info-copy,
-    .terms {
-      grid-template-columns: 1fr;
+  @media (max-width: 768px) {
+    .rn-modal-overlay {
+      padding: 0;
     }
 
-    .learning-row {
-      grid-template-columns: 1fr;
+    .rn-modal {
+      max-height: 100%;
+      height: 100%;
+      border-radius: 0;
+    }
+
+    .rn-modal-header {
+      padding: 20px 20px 16px;
+    }
+
+    .rn-modal-title {
+      font-size: 20px;
+    }
+
+    .rn-modal-body {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .rn-modal-left,
+    .rn-modal-right {
+      overflow: visible;
+    }
+
+    .rn-modal-right {
+      order: -1;
+      padding: 20px;
+      border-bottom: 1px solid var(--rn-border);
+      border-left: 0;
+    }
+
+    .rn-modal-right .rn-order-box {
+      display: none;
+    }
+
+    .rn-modal-left {
+      padding: 24px 20px;
     }
   }
 
-  @media (max-width: 620px) {
-    .info-panel {
-      grid-template-columns: 1fr;
+  @media (max-width: 600px) {
+    .rn-hero {
+      padding-bottom: 56px;
     }
 
-    .benefit-grid,
-    .mode {
-      grid-template-columns: 1fr;
+    .rn-hero h1 {
+      font-size: 34px;
     }
 
-    .service-info {
-      margin-left: 20px;
+    .rn-hero-sub {
+      font-size: 16px;
+    }
+
+    .rn-course-card {
+      padding: 28px 24px;
+    }
+
+    .rn-price-amount {
+      font-size: 36px;
+    }
+
+    .rn-cancel-card {
+      padding: 20px;
+    }
+
+    .rn-cancel-head {
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rn-cancel-price {
+      padding-left: 38px;
+      font-size: 22px;
+    }
+
+    .rn-faq summary {
+      padding: 18px 20px;
+    }
+
+    .rn-faq-answer {
+      padding: 14px 20px 18px;
+    }
+
+    .rn-btn-xl {
+      padding: 14px 28px;
+      font-size: 15px;
+    }
+
+    .rn-sticky {
+      padding: 10px 16px;
+    }
+
+    .rn-sticky-label {
+      display: none;
+    }
+
+    .rn-sticky-total {
+      font-size: 20px;
+    }
+
+    .rn-sticky-total small {
+      display: block;
+      margin: 0;
+      font-size: 11px;
+    }
+
+    .rn-sticky .rn-btn {
+      padding: 10px 14px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .rn-tip-text {
+      width: min(260px, calc(100vw - 64px));
+    }
+
+    .rn-confirm-card,
+    .rn-confirm-next {
+      padding: 22px 20px;
     }
   }
 </style>
