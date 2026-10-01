@@ -12,7 +12,7 @@
     {
       "binding": "DB",
       "database_name": "tax-academy",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "67e7418a-7f88-4799-b640-c29627eb8d19",
       "migrations_dir": "migrations"
     }
   ],
