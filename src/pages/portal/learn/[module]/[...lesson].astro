@@ -1,0 +1,67 @@
+---
+import PortalLayout from '../../../../layouts/PortalLayout.astro';
+import Icon from '../../../../components/Icon.astro';
+import { findLesson, lessonHref, moduleHref, modules } from '../../../../data/modules';
+
+export const prerender = false;
+
+const module = modules.find((m) => m.slug === Astro.params.module);
+if (!module) return Astro.redirect('/portal');
+
+const path = (Astro.params.lesson ?? '').split('/').filter(Boolean);
+const found = path.length ? findLesson(module, path) : null;
+if (path.length && !found) return Astro.redirect(moduleHref(module));
+
+const lesson = found?.lesson;
+const children = lesson ? (lesson.children ?? []) : module.lessons;
+const title = lesson?.title ?? module.title;
+---
+
+<PortalLayout title={title} subtitle={`Module ${String(module.number).padStart(2, '0')} · ${module.title}`}>
+  <nav class="mp-crumbs" aria-label="Breadcrumb">
+    <a href="/portal">Dashboard</a><span>/</span>
+    {
+      lesson ? (
+        <>
+          <a href={moduleHref(module)}>{module.title}</a>
+          {found!.trail.slice(0, -1).map((l, i) => (
+            <>
+              <span>/</span>
+              <a href={lessonHref(module, ...path.slice(0, i + 1))}>{l.title}</a>
+            </>
+          ))}
+          <span>/</span>
+          <span>{lesson.title}</span>
+        </>
+      ) : (
+        <span>{module.title}</span>
+      )
+    }
+  </nav>
+
+  <article class="mp-article">
+    <h2>{title}</h2>
+    {!lesson && <p>{module.summary}</p>}
+
+    <div class="mp-pending">
+      <Icon name="info" size={18} />
+      <span>
+        We’re moving this {lesson ? 'lesson' : 'module overview'} to the new member portal. If you need it before it’s
+        published here, <a href="/portal/messages">message our team</a>.
+      </span>
+    </div>
+
+    {
+      children.length > 0 && (
+        <div class="mp-lesson-list">
+          {children.map((c) => (
+            <a href={lessonHref(module, ...path, c.slug)}>
+              {c.title}
+              <Icon name="chevronRight" size={16} />
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </article>
+</PortalLayout>

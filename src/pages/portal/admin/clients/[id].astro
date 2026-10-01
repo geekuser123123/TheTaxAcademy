@@ -18,6 +18,7 @@ import {
 } from '../../../../lib/portal';
 import { formatDate, isEmail, str } from '../../../../lib/format';
 import { getForm } from '../../../../data/forms';
+import { formatPlanDate, getProfile, planState, profileGroups, saveProfile } from '../../../../lib/profile';
 
 export const prerender = false;
 
@@ -32,6 +33,7 @@ if (!client) return Astro.redirect('/portal/admin');
 let uploadError = '';
 let messageError = '';
 let profileError = '';
+let planSaved = false;
 let link: { url: string; purpose: 'invite' | 'reset' } | null = null;
 
 if (Astro.request.method === 'POST') {
@@ -57,6 +59,17 @@ if (Astro.request.method === 'POST') {
     await db().prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?').bind(clientId).run();
     await db().prepare('DELETE FROM sessions WHERE user_id = ?').bind(clientId).run();
     return Astro.redirect(here, 303);
+  } else if (action === 'plan') {
+    const values: Record<string, string | number | null> = {};
+    for (const f of profileGroups.flatMap((g) => g.fields)) {
+      if (f.kind === 'bool') values[f.key] = data.get(f.key) ? 1 : 0;
+      else {
+        const value = str(data.get(f.key), 500);
+        values[f.key] = f.kind === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(value) ? null : value || null;
+      }
+    }
+    await saveProfile(clientId, values);
+    planSaved = true;
   } else if (action === 'profile') {
     const name = str(data.get('name'), 120);
     const email = str(data.get('email'), 200).toLowerCase();
@@ -75,11 +88,14 @@ if (Astro.request.method === 'POST') {
 }
 
 await markRead(clientId, me);
-const [documents, messages, requests] = await Promise.all([
+const [documents, messages, requests, plan] = await Promise.all([
   listDocuments(clientId),
   listMessages(clientId),
   listClientSubmissions(clientId, client.email),
+  getProfile(clientId),
 ]);
+const status = planState(plan);
+const planValue = (key: string) => (plan?.[key] === null || plan?.[key] === undefined ? '' : String(plan[key]));
 ---
 
 <PortalLayout title={client.name}>
@@ -90,6 +106,11 @@ const [documents, messages, requests] = await Promise.all([
       <p>
         {client.company && `${client.company} · `}{client.email}{client.phone && ` · ${client.phone}`}
         {!client.is_active && <span class="badge badge-done" style="margin-left:8px">inactive</span>}
+      </p>
+      <p class="small">
+        Plan: <strong>{status.label}</strong>
+        {plan?.expiry_date && ` · term ends ${formatPlanDate(plan.expiry_date)}`}
+        {plan?.wp_user_id && <span class="muted"> · moved from WordPress (user #{plan.wp_user_id})</span>}
       </p>
     </div>
     <div class="row-actions">
@@ -117,6 +138,54 @@ const [documents, messages, requests] = await Promise.all([
       </div>
     )
   }
+
+  <div class="panel" id="plan" style="margin-bottom:20px">
+    <details open={planSaved || !plan}>
+      <summary style="cursor:pointer; font-weight:600">Plan details (shown on the client’s dashboard)</summary>
+      {
+        planSaved && (
+          <div class="alert" style="margin-top:16px">
+            <Icon name="check" size={18} />
+            Plan details saved.
+          </div>
+        )
+      }
+      <form method="post" style="margin-top:16px">
+        <input type="hidden" name="action" value="plan" />
+        {
+          profileGroups.map((g) => (
+            <fieldset class="plan-fields">
+              <legend>{g.title}</legend>
+              {g.fields.map((f) =>
+                f.kind === 'bool' ? (
+                  <label class="plan-check">
+                    <input type="checkbox" name={f.key} checked={Boolean(plan?.[f.key])} />
+                    {f.label}
+                  </label>
+                ) : (
+                  <div class="field">
+                    <label for={`pf-${f.key}`}>{f.label}</label>
+                    <input
+                      id={`pf-${f.key}`}
+                      name={f.key}
+                      type={f.kind === 'date' ? 'date' : 'text'}
+                      value={planValue(f.key)}
+                      maxlength="500"
+                    />
+                  </div>
+                ),
+              )}
+            </fieldset>
+          ))
+        }
+        <p class="small muted">
+          Plan status on the dashboard follows the expiration date (Active until it passes, then Expired). Tick
+          Cancellation or set the status to “Cancelled” for a closed plan.
+        </p>
+        <button class="button button-sm" type="submit">Save plan details</button>
+      </form>
+    </details>
+  </div>
 
   <div class="panel-grid">
     <div>
@@ -185,3 +254,27 @@ const [documents, messages, requests] = await Promise.all([
     </div>
   </div>
 </PortalLayout>
+
+<style>
+  .plan-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 16px;
+    margin: 0 0 20px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+
+  .plan-fields legend {
+    padding: 0 6px;
+    font-weight: 600;
+  }
+
+  .plan-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+</style>

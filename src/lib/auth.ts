@@ -2,6 +2,8 @@
 // Uses only Web Crypto, so it runs natively on Cloudflare Workers.
 
 import type { AstroCookies } from 'astro';
+import { createHash, createHmac } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import { db, newId } from './db';
 
 export type Role = 'client' | 'staff' | 'admin';
@@ -65,10 +67,82 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, stored: string | null): Promise<boolean> {
   if (!stored) return false;
+  if (stored.startsWith(WP_PREFIX)) return verifyWordPressHash(password, stored.slice(WP_PREFIX.length));
   const [scheme, iter, salt, hash] = stored.split('$');
   if (scheme !== 'pbkdf2' || !iter || !salt || !hash) return false;
   const actual = await pbkdf2(password, fromB64(salt), Number(iter));
   return timingSafeEqual(actual, fromB64(hash));
+}
+
+// ---------- Passwords imported from WordPress ----------
+// Clients moved from the WordPress member portal keep their password: the WordPress hash
+// is stored as "wp:<hash>" and checked the way WordPress checks it. After the first
+// successful sign-in it is replaced with a PBKDF2 hash (see isLegacyHash in login).
+
+export const WP_PREFIX = 'wp:';
+
+export const isLegacyHash = (stored: string | null) => Boolean(stored?.startsWith(WP_PREFIX));
+
+const ITOA64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+function md5(...parts: (Buffer | string)[]): Buffer {
+  const h = createHash('md5');
+  for (const p of parts) h.update(p);
+  return h.digest();
+}
+
+function phpassEncode64(input: Buffer, count: number): string {
+  let out = '';
+  let i = 0;
+  do {
+    let value = input[i++];
+    out += ITOA64[value & 0x3f];
+    if (i < count) value |= input[i] << 8;
+    out += ITOA64[(value >> 6) & 0x3f];
+    if (i++ >= count) break;
+    if (i < count) value |= input[i] << 16;
+    out += ITOA64[(value >> 12) & 0x3f];
+    if (i++ >= count) break;
+    out += ITOA64[(value >> 18) & 0x3f];
+  } while (i < count);
+  return out;
+}
+
+/** Portable phpass ($P$ / $H$), used by WordPress before 6.8. */
+function phpassCheck(password: string, hash: string): boolean {
+  const countLog2 = ITOA64.indexOf(hash[3]);
+  if (countLog2 < 7 || countLog2 > 30) return false;
+  const salt = hash.slice(4, 12);
+  if (salt.length !== 8) return false;
+  const pw = Buffer.from(password, 'utf8');
+  let digest = md5(salt, pw);
+  for (let n = 1 << countLog2; n > 0; n--) digest = md5(digest, pw);
+  const expected = hash.slice(0, 12) + phpassEncode64(digest, 16);
+  return timingSafeEqual(enc.encode(expected), enc.encode(hash));
+}
+
+function bcryptCheck(password: string, hash: string): boolean {
+  // $2y$ (PHP) and $2b$ are the same algorithm.
+  return bcrypt.compareSync(password, hash.replace(/^\$2y\$/, '$2b$'));
+}
+
+export function verifyWordPressHash(password: string, hash: string): boolean {
+  try {
+    if (hash.startsWith('$wp$')) {
+      // WordPress 6.8+: bcrypt over a base64 HMAC-SHA384 of the password.
+      const prehashed = createHmac('sha384', 'wp-sha384').update(password, 'utf8').digest('base64');
+      return bcryptCheck(prehashed, hash.slice(3));
+    }
+    if (/^\$2[aby]\$/.test(hash)) return bcryptCheck(password, hash);
+    if (hash.startsWith('$P$') || hash.startsWith('$H$')) return phpassCheck(password, hash);
+    if (/^[a-f0-9]{32}$/i.test(hash)) {
+      // Very old installs stored plain MD5.
+      return timingSafeEqual(enc.encode(md5(password).toString('hex')), enc.encode(hash.toLowerCase()));
+    }
+  } catch (err) {
+    console.error('WordPress password check failed', err);
+  }
+  return false;
 }
 
 export function passwordProblem(password: string): string | null {

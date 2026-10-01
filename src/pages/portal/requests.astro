@@ -14,14 +14,7 @@ if (isTeam(user)) return Astro.redirect('/portal/admin/submissions');
 const requests = await listClientSubmissions(user.id, user.email);
 ---
 
-<PortalLayout title="My requests">
-  <div class="page-head">
-    <div>
-      <h1>My requests</h1>
-      <p>Forms you’ve sent us using {user.email}.</p>
-    </div>
-    <a href="/forms" class="button"><Icon name="plus" size={17} />New request</a>
-  </div>
+<PortalLayout title="My Requests" subtitle={`Requests and payments made with ${user.email}`}>
   <div class="panel">
     {
       requests.length === 0 ? (

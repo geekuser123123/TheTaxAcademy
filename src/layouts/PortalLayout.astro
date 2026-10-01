@@ -3,6 +3,8 @@ import '@fontsource-variable/dm-sans';
 import '@fontsource-variable/rethink-sans';
 import '../styles/global.css';
 import '../styles/portal.css';
+import '../styles/member.css';
+import MemberShell from '../components/portal/MemberShell.astro';
 import Icon from '../components/Icon.astro';
 import type { IconName } from '../components/icons';
 import { isTeam } from '../lib/auth';
@@ -10,10 +12,12 @@ import { site } from '../data/site';
 
 interface Props {
   title: string;
+  /** Line under the title in the member portal's top bar. */
+  subtitle?: string;
   bare?: boolean; // sign-in style pages without the sidebar
 }
 
-const { title, bare = false } = Astro.props;
+const { title, subtitle, bare = false } = Astro.props;
 const user = Astro.locals.user;
 const path = Astro.url.pathname.replace(/\/$/, '');
 
@@ -55,10 +59,10 @@ const active = (href: string) =>
             </a>
             <div>
               <span class="eyebrow">Client portal</span>
-              <h1>Your documents, messages, and ongoing work.</h1>
-              <p>Private and secure. Need a form instead? Every form works without signing in.</p>
-              <a href="/forms" class="text-link">
-                Go to forms
+              <h1>Your plan, learning modules, and documents in one place.</h1>
+              <p>Private and secure. Not a member yet, or need to renew?</p>
+              <a href="/renewal-page/" class="text-link">
+                Renew my plan
                 <Icon name="arrowRight" size={16} />
               </a>
             </div>
@@ -70,6 +74,10 @@ const active = (href: string) =>
             <slot />
           </div>
         </main>
+      ) : !isTeam(user) ? (
+        <MemberShell title={title} subtitle={subtitle}>
+          <slot />
+        </MemberShell>
       ) : (
         <div class="portal-shell">
           <aside class="portal-side on-dark">

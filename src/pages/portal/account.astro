@@ -1,7 +1,7 @@
 ---
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Icon from '../../components/Icon.astro';
-import { hashPassword, passwordProblem, verifyPassword } from '../../lib/auth';
+import { hashPassword, isTeam, passwordProblem, verifyPassword } from '../../lib/auth';
 import { db, type UserRow } from '../../lib/db';
 
 export const prerender = false;
@@ -26,13 +26,17 @@ if (Astro.request.method === 'POST') {
 }
 ---
 
-<PortalLayout title="Account">
-  <div class="page-head">
-    <div>
-      <h1>Account</h1>
-      <p>Your sign-in details.</p>
-    </div>
-  </div>
+<PortalLayout title="Password & Sign-in" subtitle="Your sign-in details">
+  {
+    isTeam(user) && (
+      <div class="page-head">
+        <div>
+          <h1>Account</h1>
+          <p>Your sign-in details.</p>
+        </div>
+      </div>
+    )
+  }
   <div class="panel-grid">
     <div class="panel">
       <div class="panel-head"><h2>Change password</h2></div>

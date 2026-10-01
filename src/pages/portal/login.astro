@@ -1,7 +1,7 @@
 ---
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Icon from '../../components/Icon.astro';
-import { createSession, destroySession, verifyPassword, isTeam } from '../../lib/auth';
+import { createSession, destroySession, hashPassword, isLegacyHash, verifyPassword, isTeam } from '../../lib/auth';
 import { db, type UserRow } from '../../lib/db';
 import { str } from '../../lib/format';
 
@@ -29,6 +29,10 @@ if (Astro.request.method === 'POST') {
     .bind(email)
     .first<UserRow>();
   if (user && (await verifyPassword(password, user.password_hash))) {
+    // First sign-in with a password brought over from WordPress: store it in our own format.
+    if (isLegacyHash(user.password_hash)) {
+      await db().prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(await hashPassword(password), user.id).run();
+    }
     await destroySession(Astro.cookies);
     await createSession(Astro.cookies, user.id);
     const home = user.role === 'client' ? '/portal' : '/portal/admin';
@@ -81,8 +85,8 @@ const notice = Astro.url.searchParams.get('notice');
       <button class="button" type="submit">Sign in<Icon name="arrowRight" size={17} /></button>
     </form>
     <p class="auth-help">
-      New client or forgot your password? The team will send you a secure link.{' '}
-      <a href="/forms/contact-team">Ask for portal access</a>.
+      Forgot your password, or moved over from our old member portal and can’t sign in? We’ll send you a secure
+      link to set a new one. <a href="/contact/?topic=other">Contact our team</a>.
     </p>
   </div>
 </PortalLayout>

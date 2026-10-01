@@ -4,6 +4,7 @@ import { computeCheckout, computeYearsBehind, money, renewalServices, renewalTer
 import { db, newId } from '../../../lib/db';
 import { isEmail } from '../../../lib/format';
 import { notifyTeam } from '../../../lib/notify';
+import { applyRenewal, type MembershipResult } from '../../../lib/membership';
 
 export const prerender = false;
 
@@ -114,12 +115,29 @@ export const POST: APIRoute = async ({ request }) => {
   const reference = pick('payment_id', 'transaction_id', 'square_payment_id', 'reference');
   const receiptUrl = pick('receipt_url');
 
+  // Create or update the member's portal account and plan dates.
+  let membership: MembershipResult | null = null;
+  try {
+    membership = await applyRenewal(new URL(request.url).origin, {
+      email,
+      firstName: account.first_name,
+      lastName: account.last_name,
+      phone: account.phone,
+      business: account.business,
+      clientId: account.client_id ?? '',
+      termination,
+      years: termination ? null : checkout.term!.years,
+      services: checkout.services.map((s) => s.payloadKey),
+      total: checkout.total,
+      reference,
+    });
+  } catch (err) {
+    console.error('renewal account update failed', err);
+  }
+
   // Record it for the team workspace.
   try {
-    const client = await db()
-      .prepare("SELECT id FROM users WHERE email = ? AND role = 'client'")
-      .bind(email)
-      .first<{ id: string }>();
+    const client = membership?.userId ? { id: membership.userId } : null;
     const record: Record<string, string> = {
       'Paid for': termination ? 'Plan termination service' : 'Plan maintenance renewal',
       'Items': checkout.lines.map((l) => `${l.label} — ${money(l.amount)}`).join('\n'),
@@ -127,6 +145,13 @@ export const POST: APIRoute = async ({ request }) => {
       'Payment status': 'Paid (confirmed by payment workflow)',
     };
     if (reference) record['Payment reference'] = reference;
+    if (membership?.created) {
+      record['Portal account'] = membership.emailed
+        ? 'Created; set-password email sent'
+        : 'Created; email not sent. Send an invite link from the client page in the team workspace.';
+    } else if (!membership) {
+      record['Portal account'] = 'Not updated (error). Check the client’s plan details in the team workspace.';
+    }
     await db()
       .prepare(
         `INSERT INTO submissions (id, form_slug, name, email, phone, plan_name, payload, client_id)

@@ -1,0 +1,31 @@
+---
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import { adminForms } from '../../../data/modules';
+
+export const prerender = false;
+---
+
+<PortalLayout title="Admin Forms" subtitle="Plan administration forms">
+  <div class="mp-card" style="max-width:860px">
+    <div class="mp-card-head">
+      <div>
+        <div class="mp-section-title">Admin Forms</div>
+        <p>Choose the form for the change or record you need.</p>
+      </div>
+    </div>
+    {
+      adminForms.map((f) => (
+        <a href={`/portal/forms/${f.slug}`} class="mp-form-item">
+          <span>
+            <span>
+              <strong>{f.title}</strong>
+              <small>{f.description}</small>
+            </span>
+          </span>
+          <Icon name="chevronRight" size={16} />
+        </a>
+      ))
+    }
+  </div>
+</PortalLayout>

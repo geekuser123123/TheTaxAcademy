@@ -2,134 +2,180 @@
 import PortalLayout from '../../layouts/PortalLayout.astro';
 import Icon from '../../components/Icon.astro';
 import { isTeam } from '../../lib/auth';
-import { listDocuments, listMessages, listClientSubmissions } from '../../lib/portal';
-import { formatDate, formatDateTime } from '../../lib/format';
-import { getForm } from '../../data/forms';
-import { site } from '../../data/site';
+import { formatPlanDate, getProfile, planState } from '../../lib/profile';
+import { adminForms, moduleHref, modules } from '../../data/modules';
 
 export const prerender = false;
 
 const user = Astro.locals.user!;
 if (isTeam(user)) return Astro.redirect('/portal/admin');
 
-const [documents, messages, requests] = await Promise.all([
-  listDocuments(user.id),
-  listMessages(user.id),
-  listClientSubmissions(user.id, user.email),
-]);
-const unread = messages.filter((m) => m.author_id !== user.id && !m.read_at).length;
-const openRequests = requests.filter((r) => r.status !== 'done').length;
-const lastMessage = messages.at(-1);
-const firstName = user.name.split(' ')[0];
+const profile = await getProfile(user.id);
+const status = planState(profile);
+const firstName = profile?.first_name || user.name.split(' ')[0];
+const v = (key: string) => {
+  const value = profile?.[key];
+  return value === null || value === undefined || value === '' ? null : String(value);
+};
+
+const location = [v('location_city'), v('location_state')].filter(Boolean).join(', ');
+const meta = [
+  { label: 'Participant', value: v('participant_name') ?? user.name },
+  { label: 'Business', value: v('business_name') ?? v('company_name') ?? user.company },
+  { label: 'Entity Type', value: v('entity_type') },
+  { label: 'Plan Trustee', value: v('plan_trustee') ?? v('trustee_name') },
+  { label: 'Location', value: location || null },
+];
+const tag = status.state === 'active' ? 'Active Plan' : status.state === 'expired' ? 'Renewal Needed' : 'Member';
 ---
 
-<PortalLayout title="Overview">
-  <div class="page-head">
+<PortalLayout title="Dashboard">
+  <section class="mp-hero">
     <div>
-      <h1>Good to see you, {firstName}.</h1>
-      <p>Here’s what’s happening with your plan.</p>
+      <div class="mp-tag">Solo 401(k) · {tag}</div>
+      <h2>Welcome {firstName}!<br />Your <em>401(k) plan</em> is set up.</h2>
+      <p>
+        Most people find retirement plans confusing. This portal breaks your Solo 401(k) into{' '}
+        <strong>simple, guided steps</strong> you can understand in minutes, so the information you need is in one
+        organized place.
+      </p>
     </div>
-    <a href="/portal/messages" class="button"><Icon name="messageCircle" size={17} />Message the team</a>
-  </div>
+    <div class="mp-meta">
+      {
+        meta.map((m) => (
+          <div class="mp-meta-row">
+            <span>{m.label}</span>
+            <strong>{m.value ?? '—'}</strong>
+          </div>
+        ))
+      }
+    </div>
+  </section>
 
-  <div class="stats">
-    <a class="stat" href="/portal/documents">
-      <span class="icon-box"><Icon name="folder" size={22} /></span>
-      <span><strong>{documents.length}</strong><small>Documents</small></span>
-    </a>
-    <a class="stat" href="/portal/messages">
-      <span class="icon-box"><Icon name="messageCircle" size={22} /></span>
-      <span><strong>{unread}</strong><small>Unread messages</small></span>
-    </a>
-    <a class="stat" href="/portal/requests">
-      <span class="icon-box"><Icon name="inbox" size={22} /></span>
-      <span><strong>{openRequests}</strong><small>Open requests</small></span>
-    </a>
-  </div>
-
-  <div class="panel-grid">
-    <div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Recent documents</h2>
-          <a href="/portal/documents" class="text-link small">All documents</a>
-        </div>
-        {
-          documents.length === 0 ? (
-            <div class="empty">
-              <span class="icon-box"><Icon name="folder" size={22} /></span>
-              <p>No documents yet. When the team shares plan documents, they’ll appear here.</p>
-            </div>
-          ) : (
-            <div class="table-wrap">
-              <table class="table">
-                <tbody>
-                  {documents.slice(0, 5).map((d) => (
-                    <tr>
-                      <td>
-                        <a href={`/portal/documents/${d.id}`}>{d.title}</a>
-                        <div class="small muted">{d.category}</div>
-                      </td>
-                      <td class="small muted">{formatDate(d.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        }
-      </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Your requests</h2>
-          <a href="/forms" class="text-link small">New request</a>
-        </div>
-        {
-          requests.length === 0 ? (
-            <p class="muted small">Requests you send through the forms on the site will show up here.</p>
-          ) : (
-            <div class="table-wrap">
-              <table class="table">
-                <tbody>
-                  {requests.slice(0, 5).map((r) => (
-                    <tr>
-                      <td>{getForm(r.form_slug)?.title ?? r.form_slug}</td>
-                      <td class="small muted">{formatDate(r.created_at)}</td>
-                      <td><span class={`badge badge-${r.status}`}>{r.status.replace('_', ' ')}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        }
+  <div class="mp-stats">
+    <div class="mp-stat">
+      <span class="mp-stat-icon"><Icon name="clipboardCheck" size={18} /></span>
+      <div>
+        <div class="mp-stat-label">Plan Status</div>
+        <div class="mp-stat-value">{status.label}</div>
+        {status.sub && <div class:list={['mp-stat-sub', `is-${status.state}`]}>{status.sub}</div>}
       </div>
     </div>
-    <div>
-      <div class="panel">
-        <div class="panel-head"><h2>Latest message</h2></div>
-        {
-          lastMessage ? (
-            <div class="stack">
-              <div class:list={['bubble', { mine: lastMessage.author_id === user.id }]}>
-                <small>{lastMessage.author_id === user.id ? 'You' : lastMessage.author_name} · {formatDateTime(lastMessage.created_at)}</small>
-                <p>{lastMessage.body.length > 280 ? `${lastMessage.body.slice(0, 280)}…` : lastMessage.body}</p>
-              </div>
-              <a href="/portal/messages" class="text-link small">Open conversation<Icon name="arrowRight" size={14} /></a>
-            </div>
-          ) : (
-            <p class="muted small">No messages yet. Questions about your plan? Start a conversation with the team.</p>
-          )
-        }
+    <div class="mp-stat">
+      <span class="mp-stat-icon"><Icon name="fileText" size={18} /></span>
+      <div>
+        <div class="mp-stat-label">Renewal Type</div>
+        <div class="mp-stat-value">{v('renewal_type') ?? '—'}</div>
+        <div class="mp-stat-sub">Maintenance term</div>
       </div>
-      <div class="panel">
-        <div class="panel-head"><h2>Need something?</h2></div>
-        <div class="stack small">
-          <a href="/forms/document-request" class="text-link">Request a document</a>
-          <a href="/forms/plan-amendment" class="text-link">Plan amendment or update</a>
-          <a href="/renewals" class="text-link">Renewals</a>
-          <p class="muted">Or call us at <a href={site.phoneHref}>{site.phone}</a>.</p>
+    </div>
+    <div class="mp-stat">
+      <span class="mp-stat-icon is-dark"><Icon name="calendarCheck" size={18} /></span>
+      <div>
+        <div class="mp-stat-label">Renewal Date</div>
+        <div class="mp-stat-value">{formatPlanDate(v('renewal_date'))}</div>
+        <div class="mp-stat-sub">Last renewal</div>
+      </div>
+    </div>
+    <div class="mp-stat">
+      <span class="mp-stat-icon is-warn"><Icon name="clock" size={18} /></span>
+      <div>
+        <div class="mp-stat-label">Expiration Date</div>
+        <div class="mp-stat-value">{formatPlanDate(v('expiry_date'))}</div>
+        <div class="mp-stat-sub">Maintenance term ends</div>
+      </div>
+    </div>
+  </div>
+
+  {
+    status.state === 'expired' && (
+      <div class="mp-notice">
+        <span>
+          Your plan maintenance term ended on <strong>{formatPlanDate(v('expiry_date'))}</strong>. Renew to keep
+          required document updates and support in place.
+        </span>
+        <a href="/renewal-page/" class="mp-btn-green">Renew My Plan</a>
+      </div>
+    )
+  }
+
+  <div class="mp-section-head">
+    <h2>Plan Modules</h2>
+    <p>Step-by-step guides for every part of your Solo 401(k)</p>
+  </div>
+  <div class="mp-modules">
+    {
+      modules.map((m) => (
+        <a class="mp-module" href={moduleHref(m)}>
+          <div class="mp-module-num">Module {String(m.number).padStart(2, '0')}</div>
+          <div class="mp-module-icon">
+            <Icon name={m.icon} size={20} stroke={1.8} />
+          </div>
+          <h3>{m.title}</h3>
+          <p>{m.summary}</p>
+          <div class="mp-module-link">{m.cta} →</div>
+        </a>
+      ))
+    }
+    <a class="mp-module" href="/portal/forms">
+      <div class="mp-module-num">Module 08</div>
+      <div class="mp-module-icon"><Icon name="fileText" size={20} stroke={1.8} /></div>
+      <h3>Admin Forms</h3>
+      <p>Contributions, Roth conversions, trustee changes, termination, and Form 5500-EZ filing.</p>
+      <div class="mp-module-link">Open Forms →</div>
+    </a>
+  </div>
+
+  <div class="mp-bottom">
+    <div class="mp-card">
+      <div class="mp-card-head">
+        <div>
+          <div class="mp-section-title">Admin Forms</div>
+          <p>Quick access to all plan administration forms</p>
         </div>
+        <a href="/portal/forms" class="mp-btn">View All</a>
+      </div>
+      {
+        adminForms.map((f) => (
+          <a href={`/portal/forms/${f.slug}`} class="mp-form-item">
+            <span>
+              <span>
+                <strong>{f.title}</strong>
+                <small>{f.description}</small>
+              </span>
+            </span>
+            <Icon name="chevronRight" size={16} />
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="mp-card mp-info">
+      <div class="mp-section-title" style="font-size:16px;margin-bottom:12px">Why Your Info Matters</div>
+      <h4>Plan Documents</h4>
+      <ul>
+        <li>
+          Your plan documents are tied to the personal and business details on record. Keeping them accurate helps keep
+          your plan documentation correct.
+        </li>
+      </ul>
+      <hr />
+      <h4>Tax Reporting</h4>
+      <ul>
+        <li>Annual reporting depends on the accuracy of your stored details. Outdated records can create discrepancies.</li>
+      </ul>
+      <hr />
+      <h4>Changes to Report</h4>
+      <ul>
+        <li>Legal name changes</li>
+        <li>Address or business name changes</li>
+        <li>Business structure changes</li>
+        <li>Phone or email updates</li>
+      </ul>
+      <div class="mp-update">
+        <h5>Need to Update Your Information?</h5>
+        <p>Contact our team to correct or update your records and keep your plan documents accurate.</p>
+        <a href="/portal/messages">Request an Update →</a>
       </div>
     </div>
   </div>

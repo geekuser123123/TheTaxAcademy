@@ -19,3 +19,21 @@ export async function notifyTeam(subject: string, text: string): Promise<void> {
     console.error('notifyTeam error', err);
   }
 }
+
+/** Sends one email through Resend. Returns false (and logs) if email isn't configured or fails. */
+export async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
+  const { RESEND_API_KEY, MAIL_FROM } = env as unknown as MailEnv;
+  if (!RESEND_API_KEY || !MAIL_FROM) return false;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: MAIL_FROM, to: [to], subject, text }),
+    });
+    if (!res.ok) console.error('sendEmail failed', res.status, await res.text());
+    return res.ok;
+  } catch (err) {
+    console.error('sendEmail error', err);
+    return false;
+  }
+}

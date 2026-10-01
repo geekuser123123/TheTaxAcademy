@@ -28,13 +28,7 @@ if (Astro.request.method === 'POST') {
 const documents = await listDocuments(user.id);
 ---
 
-<PortalLayout title="Documents">
-  <div class="page-head">
-    <div>
-      <h1>Documents</h1>
-      <p>Your plan documents and anything you’ve shared with the team.</p>
-    </div>
-  </div>
+<PortalLayout title="My Documents" subtitle="Your plan documents and anything you’ve shared with the team">
   <div class="panel-grid">
     <div class="panel">
       {

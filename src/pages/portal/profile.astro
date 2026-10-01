@@ -1,0 +1,86 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { isTeam } from '../../lib/auth';
+import { formatPlanDate, getProfile, planState } from '../../lib/profile';
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+if (isTeam(user)) return Astro.redirect('/portal/account');
+
+const profile = await getProfile(user.id);
+const status = planState(profile);
+const v = (key: string) => {
+  const value = profile?.[key];
+  return value === null || value === undefined || value === '' ? '—' : String(value);
+};
+const location = [profile?.location_city, profile?.location_state].filter(Boolean).join(', ') || '—';
+
+const sections = [
+  {
+    title: 'Participant',
+    rows: [
+      ['Name', profile?.participant_name || user.name],
+      ['Email', user.email],
+      ['Phone', v('phone_number')],
+      ['Address', [profile?.street_address, profile?.city_state_zip].filter(Boolean).join(', ') || '—'],
+    ],
+  },
+  {
+    title: 'Business',
+    rows: [
+      ['Business name', profile?.business_name || profile?.company_name || user.company || '—'],
+      ['Entity type', v('entity_type')],
+      ['Business address', v('business_address')],
+      ['Location', location],
+    ],
+  },
+  {
+    title: 'Plan',
+    rows: [
+      ['Plan sponsor', v('plan_sponsor')],
+      ['Plan trustee', profile?.plan_trustee || profile?.trustee_name || '—'],
+      ['Co-trustee', v('co_trustee')],
+      ['Spouse participant', v('spouse_participant')],
+    ],
+  },
+  {
+    title: 'Maintenance',
+    rows: [
+      ['Plan status', status.label],
+      ['Renewal type', v('renewal_type')],
+      ['Last renewal', formatPlanDate(profile?.renewal_date)],
+      ['Term ends', formatPlanDate(profile?.expiry_date)],
+    ],
+  },
+];
+---
+
+<PortalLayout title="My Profile" subtitle="The details we have on record for your plan">
+  <div class="mp-profile-grid">
+    {
+      sections.map((s) => (
+        <div class="mp-card">
+          <div class="mp-section-title" style="font-size:16px;margin-bottom:14px">{s.title}</div>
+          <dl class="mp-dl">
+            {s.rows.map(([label, value]) => (
+              <div>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      ))
+    }
+  </div>
+  <div class="mp-update" style="max-width:640px;margin-top:20px">
+    <h5>Something out of date?</h5>
+    <p>Your plan documents depend on these details. Send us the correction and our team will update your records.</p>
+    <a href="/portal/messages">Request an Update →</a>
+  </div>
+  <p class="small muted" style="margin-top:20px">
+    <Icon name="keyRound" size={14} /> To change your password, go to <a href="/portal/account">Password &amp; Sign-in</a>.
+  </p>
+</PortalLayout>

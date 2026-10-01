@@ -28,13 +28,7 @@ await markRead(user.id, user);
 const messages = await listMessages(user.id);
 ---
 
-<PortalLayout title="Messages">
-  <div class="page-head">
-    <div>
-      <h1>Messages</h1>
-      <p>A private conversation with the Tax Academy team.</p>
-    </div>
-  </div>
+<PortalLayout title="Contact Support" subtitle="A private conversation with the Tax Academy team">
   <div class="panel">
     <MessageThread messages={messages} viewer={user} error={error} emptyText="No messages yet. Ask a question, share an update, or let us know what you need." />
   </div>

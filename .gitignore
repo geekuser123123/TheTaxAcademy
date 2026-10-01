@@ -7,3 +7,7 @@ dist/
 .env
 .env.*
 .DS_Store
+
+# WordPress member export and import (password hashes, personal data)
+*.csv
+import.sql

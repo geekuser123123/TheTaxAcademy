@@ -1,0 +1,27 @@
+---
+import PortalLayout from '../../../layouts/PortalLayout.astro';
+import Icon from '../../../components/Icon.astro';
+import { adminForms } from '../../../data/modules';
+
+export const prerender = false;
+
+const form = adminForms.find((f) => f.slug === Astro.params.slug);
+if (!form) return Astro.redirect('/portal/forms');
+---
+
+<PortalLayout title={form.title} subtitle="Admin Forms">
+  <nav class="mp-crumbs" aria-label="Breadcrumb">
+    <a href="/portal">Dashboard</a><span>/</span><a href="/portal/forms">Admin Forms</a><span>/</span><span>{form.title}</span>
+  </nav>
+  <article class="mp-article">
+    <h2>{form.title}</h2>
+    <p>{form.description}.</p>
+    <div class="mp-pending">
+      <Icon name="info" size={18} />
+      <span>
+        We’re moving this form to the new member portal. If you need it now, <a href="/portal/messages">message our team</a>
+        and we’ll help you complete it.
+      </span>
+    </div>
+  </article>
+</PortalLayout>

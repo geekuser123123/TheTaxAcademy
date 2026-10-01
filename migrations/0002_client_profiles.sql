@@ -1,0 +1,48 @@
+-- Plan details for each client (the ACF user fields from the WordPress member portal).
+-- One row per client; columns mirror the ACF field names. Dates are YYYY-MM-DD.
+
+CREATE TABLE client_profiles (
+  user_id                      TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  wp_user_id                   INTEGER,
+  first_name                   TEXT,
+  last_name                    TEXT,
+  participant_name             TEXT,
+  date_of_birth                TEXT,
+  phone_number                 TEXT,
+  email_address                TEXT,
+  street_address               TEXT,
+  city_state_zip               TEXT,
+  business_name                TEXT,
+  company_name                 TEXT,
+  entity_type                  TEXT,
+  business_ein                 TEXT,
+  business_address             TEXT,
+  ownership_of_other_business  TEXT,
+  location_city                TEXT,
+  location_state               TEXT,
+  plan_sponsor                 TEXT,
+  plan_trustee                 TEXT,
+  trustee_name                 TEXT,
+  co_trustee                   TEXT,
+  spouse_name                  TEXT,
+  spouse_participant           TEXT,
+  spouse_phone_number          TEXT,
+  spouse_email                 TEXT,
+  plan_status                  TEXT,
+  renewal_type                 TEXT,
+  renewal_date                 TEXT,
+  expiry_date                  TEXT,
+  payment_status               TEXT,
+  course_access_status         TEXT,
+  total_paid                   TEXT,
+  transaction_id               TEXT,
+  addon_5500ez                 INTEGER NOT NULL DEFAULT 0,
+  addon_joinder                INTEGER NOT NULL DEFAULT 0,
+  addon_amendment              INTEGER NOT NULL DEFAULT 0,
+  cancellation                 INTEGER NOT NULL DEFAULT 0,
+  form_5500ez_submitted        INTEGER NOT NULL DEFAULT 0,
+  zoho_client_id               TEXT,
+  updated_at                   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_client_profiles_expiry ON client_profiles(expiry_date);

@@ -1,0 +1,169 @@
+---
+// Client (member) portal shell: sidebar with the learning modules, top bar, footer.
+// Same structure as the WordPress member portal.
+import Icon from '../Icon.astro';
+import type { IconName } from '../icons';
+import { modules, moduleHref, lessonHref, type Module } from '../../data/modules';
+import { site } from '../../data/site';
+import { db } from '../../lib/db';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+}
+
+const { title, subtitle = 'Solo 401(k) Member Portal' } = Astro.props;
+const user = Astro.locals.user!;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/portal';
+
+const unread =
+  (
+    await db()
+      .prepare('SELECT COUNT(*) AS n FROM messages WHERE client_id = ? AND author_id != ? AND read_at IS NULL')
+      .bind(user.id, user.id)
+      .first<{ n: number }>()
+  )?.n ?? 0;
+
+const current = (href: string) => (path === href ? 'page' : undefined);
+const within = (href: string) => path === href || path.startsWith(`${href}/`);
+const inModule = (m: Module) => within(moduleHref(m));
+
+const resources: { href: string; label: string; icon: IconName; badge?: number }[] = [
+  { href: '/portal/forms', label: 'Admin Forms', icon: 'fileText' },
+  { href: '/portal/messages', label: 'Contact Support', icon: 'messageCircle', badge: unread },
+];
+const account: { href: string; label: string; icon: IconName }[] = [
+  { href: '/portal/documents', label: 'My Documents', icon: 'folder' },
+  { href: '/portal/requests', label: 'My Requests', icon: 'inbox' },
+  { href: '/portal/profile', label: 'My Profile', icon: 'users' },
+  { href: '/portal/account', label: 'Password & Sign-in', icon: 'keyRound' },
+];
+---
+
+<div class="mp" data-mp>
+  <div class="mp-overlay" data-mp-close></div>
+
+  <aside class="mp-side" id="mp-side" aria-label="Member portal">
+    <div class="mp-brand">
+      <a href="/portal" class="mp-logo">
+        <img src="/images/tax-academy-logo.png" alt="" width="40" height="40" />
+        <span>
+          <strong>{site.name}</strong>
+          <small>Member Portal</small>
+        </span>
+      </a>
+      <button type="button" class="mp-close" data-mp-close aria-label="Close menu"><Icon name="x" size={20} /></button>
+    </div>
+
+    <nav class="mp-nav">
+      <div class="mp-label">Overview</div>
+      <a class="mp-item" href="/portal" aria-current={current('/portal')}>
+        <Icon name="layoutDashboard" size={16} />Dashboard
+      </a>
+
+      <div class="mp-label">Modules</div>
+      {
+        modules.map((m) => (
+          <details class="mp-group" open={inModule(m)}>
+            <summary class:list={['mp-item', { 'is-active': inModule(m) }]}>
+              <Icon name={m.icon} size={16} />
+              <span class="mp-grow">{m.title}</span>
+              <span class="mp-chev"><Icon name="chevronRight" size={14} /></span>
+            </summary>
+            <div class="mp-sub">
+              <a href={moduleHref(m)} aria-current={current(moduleHref(m))}>Module overview</a>
+              {m.lessons.map((l) =>
+                l.children ? (
+                  <details class="mp-subgroup" open={within(lessonHref(m, l.slug))}>
+                    <summary>
+                      <span class="mp-grow">{l.title}</span>
+                      <span class="mp-chev"><Icon name="chevronRight" size={12} /></span>
+                    </summary>
+                    <a href={lessonHref(m, l.slug)} aria-current={current(lessonHref(m, l.slug))}>Overview</a>
+                    {l.children.map((c) => (
+                      <a href={lessonHref(m, l.slug, c.slug)} aria-current={current(lessonHref(m, l.slug, c.slug))}>
+                        {c.title}
+                      </a>
+                    ))}
+                  </details>
+                ) : (
+                  <a href={lessonHref(m, l.slug)} aria-current={current(lessonHref(m, l.slug))}>{l.title}</a>
+                ),
+              )}
+            </div>
+          </details>
+        ))
+      }
+
+      <div class="mp-label">Resources</div>
+      {
+        resources.map((r) => (
+          <a class="mp-item" href={r.href} aria-current={within(r.href) ? 'page' : undefined}>
+            <Icon name={r.icon} size={16} />
+            <span class="mp-grow">{r.label}</span>
+            {r.badge ? <span class="mp-badge">{r.badge}</span> : null}
+          </a>
+        ))
+      }
+
+      <div class="mp-label">Your account</div>
+      {
+        account.map((r) => (
+          <a class="mp-item" href={r.href} aria-current={within(r.href) ? 'page' : undefined}>
+            <Icon name={r.icon} size={16} />
+            {r.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="mp-user">
+      <strong>{user.name}</strong>
+      <small>Solo 401(k) Plan</small>
+    </div>
+  </aside>
+
+  <div class="mp-main">
+    <header class="mp-top">
+      <div class="mp-top-left">
+        <button type="button" class="mp-menu" data-mp-open aria-label="Open menu" aria-controls="mp-side" aria-expanded="false">
+          <Icon name="menu" size={20} />
+        </button>
+        <div>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+      </div>
+      <div class="mp-top-right">
+        <a href="/portal/messages" class="mp-btn mp-hide-sm">Contact Support</a>
+        <a href="/portal/profile" class="mp-btn">My Profile</a>
+        <form method="post" action="/portal/logout">
+          <button type="submit" class="mp-btn">Logout</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="mp-content" id="main">
+      <slot />
+    </main>
+
+    <footer class="mp-footer">
+      <strong>{site.name}</strong> · {site.phone} · © {new Date().getFullYear()}
+    </footer>
+  </div>
+</div>
+
+<script>
+  const root = document.querySelector('[data-mp]')!;
+  const openBtn = root.querySelector('[data-mp-open]') as HTMLButtonElement;
+  const setOpen = (open: boolean) => {
+    root.classList.toggle('is-open', open);
+    openBtn.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  openBtn.addEventListener('click', () => setOpen(true));
+  root.querySelectorAll('[data-mp-close]').forEach((el) => el.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.classList.contains('is-open')) setOpen(false);
+  });
+</script>

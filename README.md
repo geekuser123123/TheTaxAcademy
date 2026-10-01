@@ -15,7 +15,7 @@ Website and client portal for The Tax Academy, LLC.
 
 - **Online renewal** (`/renewal-page/`): members verify their email, choose a term and services, and pay by card. Payments run through the existing n8n workflow and Square (see "Online renewal" below).
 - **Public forms** (provider review, contact): saved to the database, shown to the team in the portal, and optionally emailed to the team.
-- **Member portal** (`/portal`, the Member Login destination): private documents, messages with the team, and the member's requests.
+- **Member portal** (`/portal`, the Member Login destination): the member dashboard (plan status, renewal and expiration dates, plan details), the learning modules, admin forms, private documents, messages with the team, and the member's requests.
 - **Team workspace** (`/portal/admin`): add members and send invite links, share and receive documents, reply to messages, and work through form requests.
 
 Old URLs from the previous structure (`/forms/*`, `/services/*`, `/renewals`, `/privacy`, …) permanently redirect to their replacements; see `redirects` in `astro.config.mjs`.
@@ -93,6 +93,7 @@ The renewal checkout uses the same n8n workflow and Square account as the WordPr
 2. Square's card field (Web Payments SDK) turns the card into a one-time token in the browser. Card details never reach this site.
 3. On **Complete Renewal**, the site looks the account up again, **recalculates the total from `src/data/renewal.ts`**, and posts the payload to the n8n **payment** webhook, which charges the token.
 4. On success the member sees a receipt, the payment appears in the team workspace under Form requests, and the team gets an email if notifications are on. A declined card shows the error from n8n and leaves the form in place.
+5. The member's portal account is updated: the renewal date becomes today and the expiration date moves forward by the term (from the current expiration date if it hasn't passed). If the member has no portal account yet, one is created and they're emailed a link to set their password (needs `RESEND_API_KEY` and `MAIL_FROM`; otherwise the team sends an invite link from the client's page). This replaces the WordPress step that created the member account, so **remove the "create WordPress user" step from the n8n workflow** when this site goes live.
 
 Set the webhooks as Worker secrets (never in code):
 
@@ -107,6 +108,40 @@ Until both URLs are set, the page loads normally but verification reports that o
 **Recommended once this site is live:** the WordPress page exposed the webhook URLs publicly. Create new webhook paths in n8n, store only the new ones here, and have the payment workflow reject requests whose `x-webhook-secret` header doesn't match `RENEWAL_WEBHOOK_SECRET`. Only this site can then trigger charges, always with server-calculated amounts.
 
 For local testing, point `.dev.vars` at a test n8n workflow (see `.dev.vars.example`). Square's card field works on `localhost`.
+
+## Moving clients from WordPress
+
+Members of the WordPress member portal can sign in here with the same email and password. Their ACF fields (plan details, renewal and expiration dates, and so on) come along and fill in their dashboard.
+
+1. **Print the export query** and run it in phpMyAdmin on the WordPress database (SQL tab). If your tables don't start with `wp_`, pass your prefix, e.g. `--prefix wpxy_`.
+
+   ```bash
+   node scripts/import-wordpress.mjs --print-query
+   ```
+
+2. **Export the result as CSV** (phpMyAdmin: *Export* under the results → CSV, tick *Put columns names in the first row*). Save it outside the project folder or anywhere Git ignores it. It contains password hashes and personal details: never commit it or email it.
+
+3. **Turn it into SQL** and check the summary (clients found, team accounts skipped, duplicates, password formats):
+
+   ```bash
+   node scripts/import-wordpress.mjs path/to/export.csv --out import.sql
+   ```
+
+4. **Import it** (after `npm run db:migrate:remote`), then delete both files:
+
+   ```bash
+   npx wrangler d1 execute tax-academy --remote --file import.sql
+   ```
+
+How it works:
+
+- WordPress administrators, editors, authors, and contributors are skipped; only member accounts come over. Existing team accounts here are never changed.
+- Passwords are kept as the WordPress hash and checked the way WordPress checks them (both the pre-6.8 format and the 6.8+ bcrypt format). On each member's first sign-in the password is re-saved in this site's own format.
+- Checking the WordPress 6.8+ format takes a few hundred milliseconds of CPU, more than the Workers Free plan allows per request. Use the **Workers Paid** plan (or members on that format will need a set-password link). It's a one-time cost per member.
+- Re-running the import updates members in place, so you can run it once to test and again right before switching over. It overwrites plan details with the WordPress values, so don't re-run it after the team starts editing plan details here.
+- Members whose password can't be brought over (or who forget it) get a set-password link from their page in the team workspace.
+
+The team edits plan details on each client's page (Plan details). The dashboard's plan status follows the expiration date: Active until it passes, then Expired. Ticking Cancellation, or setting the status to "Cancelled", shows Cancelled.
 
 ## Optional features
 
@@ -143,12 +178,15 @@ Page copy lives in the page files under `src/pages/`. Shared data lives in `src/
 - `renewal.ts`: renewal terms, additional services, and their prices (the server recalculates totals from this file)
 - `forms.ts`: provider review, contact, and renewal form fields; contact reasons and `?topic=` values
 - `faqs.ts`: homepage, switching, and renewal questions
+- `modules.ts`: the member portal's learning modules, lessons, and admin forms (lesson content is being moved over page by page)
 - `media.ts`: approved screenshots of the member experience (sections stay hidden or fall back to text until added)
 
 ## Before launch
 
 Items marked `TODO(confirm)` in the code need the team's input:
 
+- **Member import**: run the WordPress import (see "Moving clients from WordPress") and sign in as a test member; remove the "create WordPress user" step from the n8n payment workflow.
+- **Expiration dates**: confirm that a renewal should extend from the current expiration date (early renewals) rather than from the payment date.
 - **Renewal webhooks**: set the three `RENEWAL_*` secrets (see "Online renewal"), then do one real low-value test payment end to end.
 - **Account fee**: the existing checkout adds a $45 "Reinstatement Fee" to every renewal that isn't behind (this was the $255 = $200 + $45 on the old page). Confirm the label and when it should apply in `src/data/renewal.ts`.
 - **Pricing**: confirm every price in `src/data/renewal.ts` against the billing configuration.
