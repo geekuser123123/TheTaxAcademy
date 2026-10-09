@@ -116,6 +116,11 @@ p {
   padding-block: clamp(64px, 9vw, 112px);
 }
 
+/* Light band, so two white sections never sit back to back */
+.section-cream {
+  background: var(--cream);
+}
+
 .skip {
   position: absolute;
   left: -9999px;
